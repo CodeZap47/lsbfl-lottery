@@ -62,17 +62,16 @@ export function TicketCard({ ticket, className, onClick }: TicketCardProps) {
       )}
     >
       <div
-        className="relative w-full transition-transform duration-700 ease-in-out"
+        className="relative w-full aspect-[2/1] min-h-[200px] transition-transform duration-700 ease-in-out"
         style={{
           transformStyle: "preserve-3d",
           transform: flipped ? "rotateY(180deg)" : "rotateY(0deg)",
-          minHeight: "200px",
         }}
       >
         {/* Front */}
         <div
           className={cn(
-            "absolute inset-0 ticket-card backface-hidden",
+            "absolute inset-0 rounded-3xl overflow-hidden backface-hidden",
             "bg-card border border-border",
             "p-5 flex flex-col justify-between",
             ticket.status === "Winner" && "border-primary/60 glow-gold",
@@ -141,7 +140,7 @@ export function TicketCard({ ticket, className, onClick }: TicketCardProps) {
 
         {/* Back */}
         <div
-          className="absolute inset-0 ticket-card backface-hidden bg-card border border-border p-5 flex flex-col justify-between"
+          className="absolute inset-0 rounded-3xl overflow-hidden backface-hidden bg-card border border-border p-5 flex flex-col justify-between"
           style={{ backfaceVisibility: "hidden", transform: "rotateY(180deg)" }}
         >
           <div className="text-center">

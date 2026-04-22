@@ -126,7 +126,7 @@ const MOCK_DATA: MockData = {
       numbersToSelect: 5,
       maxNumber: 50,
       nextDrawId: "draw-004",
-      coverColor: "#0a2010",
+      coverColor: "#0d2818",
       accentColor: "#4ade80",
       logoEmoji: "🛡️",
       tags: ["sin riesgo", "DeFi", "rendimiento"],

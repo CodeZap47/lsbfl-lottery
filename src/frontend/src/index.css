@@ -165,4 +165,86 @@
         transparent 70%
       ), oklch(var(--background));
   }
+
+  /* Prize flow: FoilTicketCard — light “day” surface vs cinematic dark */
+  .foil-ticket-surface {
+    background: linear-gradient(
+      135deg,
+      oklch(0.97 0.02 80) 0%,
+      oklch(0.93 0.035 80) 42%,
+      oklch(0.96 0.03 160) 100%
+    );
+  }
+
+  .dark .foil-ticket-surface {
+    background: linear-gradient(
+      135deg,
+      oklch(0.12 0.02 80) 0%,
+      oklch(0.16 0.04 80) 40%,
+      oklch(0.12 0.03 160) 100%
+    );
+  }
+
+  .foil-ticket-shimmer {
+    opacity: 0.18;
+    background: linear-gradient(
+      105deg,
+      transparent 30%,
+      oklch(0.72 0.18 80 / 0.32) 50%,
+      transparent 70%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 3s ease-in-out infinite;
+  }
+
+  .dark .foil-ticket-shimmer {
+    opacity: 0.3;
+    background: linear-gradient(
+      105deg,
+      transparent 30%,
+      oklch(0.72 0.18 80 / 0.5) 50%,
+      transparent 70%
+    );
+  }
+}
+
+/* Sonner: app fonts + brand-aligned rich toast tokens (override library defaults) */
+[data-sonner-toaster] {
+  font-family: var(--font-body), ui-sans-serif, system-ui, sans-serif;
+}
+
+[data-sonner-toaster][data-theme="light"] {
+  --success-bg: oklch(var(--primary) / 0.14);
+  --success-border: oklch(var(--primary) / 0.32);
+  --success-text: oklch(var(--foreground));
+
+  --info-bg: oklch(var(--secondary) / 0.12);
+  --info-border: oklch(var(--secondary) / 0.32);
+  --info-text: oklch(var(--foreground));
+
+  --warning-bg: oklch(var(--chart-4) / 0.14);
+  --warning-border: oklch(var(--chart-4) / 0.3);
+  --warning-text: oklch(var(--foreground));
+
+  --error-bg: oklch(var(--destructive) / 0.12);
+  --error-border: oklch(var(--destructive) / 0.3);
+  --error-text: oklch(var(--destructive));
+}
+
+[data-sonner-toaster][data-theme="dark"] {
+  --success-bg: oklch(var(--primary) / 0.2);
+  --success-border: oklch(var(--primary) / 0.42);
+  --success-text: oklch(var(--foreground));
+
+  --info-bg: oklch(var(--secondary) / 0.18);
+  --info-border: oklch(var(--secondary) / 0.38);
+  --info-text: oklch(var(--foreground));
+
+  --warning-bg: oklch(var(--chart-4) / 0.18);
+  --warning-border: oklch(var(--chart-4) / 0.36);
+  --warning-text: oklch(var(--foreground));
+
+  --error-bg: oklch(var(--destructive) / 0.18);
+  --error-border: oklch(var(--destructive) / 0.38);
+  --error-text: oklch(var(--destructive-foreground));
 }

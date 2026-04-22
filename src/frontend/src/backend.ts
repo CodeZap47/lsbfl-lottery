@@ -248,8 +248,13 @@ export interface backendInterface {
     recordSale(storeId: StoreId, ticketIds: Array<TicketId>, totalAmount: bigint, commission: bigint): Promise<POSSale>;
     updateSettings(settings: UserSettings): Promise<boolean>;
     updateUserProfile(name: string | null, email: string | null, country: string | null, currency: string | null): Promise<boolean>;
+    adminBootstrap(): Promise<void>;
+    adminIsCallerAuthorized(caller: UserId): Promise<boolean>;
+    adminListDraftEntries(): Promise<Array<DraftEntry>>;
+    adminUpsertDraft(config: CandidLotteryProductConfig): Promise<AdminUpsertDraftResult>;
+    adminPublishLottery(slug: string): Promise<AdminPublishLotteryResult>;
 }
-import type { Badge as _Badge, BadgeType as _BadgeType, ClaimStatus as _ClaimStatus, Draw as _Draw, DrawId as _DrawId, DrawStatus as _DrawStatus, Lottery as _Lottery, LotteryId as _LotteryId, LotteryType as _LotteryType, PayoutMethod as _PayoutMethod, PrizeClaim as _PrizeClaim, Store as _Store, StoreId as _StoreId, Ticket as _Ticket, TicketId as _TicketId, TicketStatus as _TicketStatus, Timestamp as _Timestamp, UserId as _UserId, UserPublic as _UserPublic, UserStats as _UserStats } from "./declarations/backend.did.d.ts";
+import type { AdminPublishLotteryResult, AdminUpsertDraftResult, Badge as _Badge, BadgeType as _BadgeType, ClaimStatus as _ClaimStatus, Draw as _Draw, DrawId as _DrawId, DrawStatus as _DrawStatus, DraftEntry, Lottery as _Lottery, LotteryId as _LotteryId, LotteryProductConfig as CandidLotteryProductConfig, LotteryType as _LotteryType, PayoutMethod as _PayoutMethod, PrizeClaim as _PrizeClaim, Store as _Store, StoreId as _StoreId, Ticket as _Ticket, TicketId as _TicketId, TicketStatus as _TicketStatus, Timestamp as _Timestamp, UserId as _UserId, UserPublic as _UserPublic, UserStats as _UserStats } from "./declarations/backend.did.d.ts";
 export class Backend implements backendInterface {
     constructor(private actor: ActorSubclass<_SERVICE>, private _uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, private _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, private processError?: (error: unknown) => never){}
     async claimPrize(arg0: TicketId, arg1: PayoutMethod): Promise<PrizeClaim | null> {
@@ -530,6 +535,66 @@ export class Backend implements backendInterface {
         } else {
             const result = await this.actor.updateUserProfile(to_candid_opt_n10(this._uploadFile, this._downloadFile, arg0), to_candid_opt_n10(this._uploadFile, this._downloadFile, arg1), to_candid_opt_n10(this._uploadFile, this._downloadFile, arg2), to_candid_opt_n10(this._uploadFile, this._downloadFile, arg3));
             return result;
+        }
+    }
+    async adminBootstrap(): Promise<void> {
+        if (this.processError) {
+            try {
+                await this.actor.adminBootstrap();
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            await this.actor.adminBootstrap();
+        }
+    }
+    async adminIsCallerAuthorized(arg0: UserId): Promise<boolean> {
+        if (this.processError) {
+            try {
+                return await this.actor.adminIsCallerAuthorized(arg0);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            return await this.actor.adminIsCallerAuthorized(arg0);
+        }
+    }
+    async adminListDraftEntries(): Promise<Array<DraftEntry>> {
+        if (this.processError) {
+            try {
+                return await this.actor.adminListDraftEntries();
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            return await this.actor.adminListDraftEntries();
+        }
+    }
+    async adminUpsertDraft(arg0: CandidLotteryProductConfig): Promise<AdminUpsertDraftResult> {
+        if (this.processError) {
+            try {
+                return await this.actor.adminUpsertDraft(arg0);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            return await this.actor.adminUpsertDraft(arg0);
+        }
+    }
+    async adminPublishLottery(arg0: string): Promise<AdminPublishLotteryResult> {
+        if (this.processError) {
+            try {
+                return await this.actor.adminPublishLottery(arg0);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            return await this.actor.adminPublishLottery(arg0);
         }
     }
 }

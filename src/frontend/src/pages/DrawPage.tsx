@@ -3,15 +3,84 @@ import { CountdownTimer } from "@/components/ui/CountdownTimer";
 import { GlowButton } from "@/components/ui/GlowButton";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useMockData } from "@/hooks/useMockData";
+import { useTheme } from "@/hooks/useTheme";
 import { cn } from "@/lib/utils";
 import { useNavigate, useParams } from "@tanstack/react-router";
 import { ArrowLeft, CheckCircle2, Shield, Ticket } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 type DrawPhase = "pre" | "spinning" | "revealing" | "done";
+
+function getDrawPageSurfaces(isDark: boolean) {
+  return {
+    pageBackground: isDark
+      ? "radial-gradient(ellipse at 50% 0%, oklch(0.14 0.04 80 / 0.5) 0%, oklch(0.07 0.01 50) 60%)"
+      : "radial-gradient(ellipse at 50% 0%, oklch(0.92 0.1 85 / 0.45) 0%, oklch(0.97 0.02 78) 55%), oklch(var(--background))",
+    megaWinOverlay: isDark
+      ? "oklch(0.06 0.01 50 / 0.9)"
+      : "oklch(var(--background) / 0.92)",
+    headerBackground: isDark
+      ? "oklch(0.09 0.01 50 / 0.9)"
+      : "oklch(var(--card) / 0.88)",
+    countdownCard: isDark
+      ? "oklch(0.12 0.02 80 / 0.5)"
+      : "oklch(var(--card) / 0.82)",
+    jackpotGoldShadow: isDark
+      ? "0 0 40px oklch(0.72 0.18 80 / 0.4)"
+      : "0 2px 20px oklch(0.55 0.12 80 / 0.2)",
+    jackpotCardGoldShadow: isDark
+      ? "0 0 30px oklch(0.72 0.18 80 / 0.3)"
+      : "0 2px 16px oklch(0.55 0.12 80 / 0.18)",
+    winBanner: isDark
+      ? {
+          background:
+            "radial-gradient(ellipse at 50% 0%, oklch(0.18 0.06 80 / 0.8), oklch(0.1 0.02 80 / 0.4))",
+          boxShadow: "0 0 40px oklch(0.72 0.18 80 / 0.3)",
+        }
+      : {
+          background:
+            "radial-gradient(ellipse at 50% 0%, oklch(0.95 0.08 85 / 0.9) 0%, oklch(var(--card)) 70%)",
+          boxShadow: "0 8px 32px oklch(0.55 0.12 80 / 0.12)",
+        },
+    jackpotCard: isDark
+      ? "oklch(0.11 0.02 80 / 0.6)"
+      : "oklch(var(--card) / 0.92)",
+    revealPlaceholder: isDark
+      ? "oklch(0.12 0.02 80 / 0.4)"
+      : "oklch(var(--muted) / 0.65)",
+    resultsTable: isDark
+      ? "oklch(0.10 0.01 50 / 0.7)"
+      : "oklch(var(--card) / 0.96)",
+    ticketWinnerBg: isDark
+      ? "radial-gradient(ellipse at 0% 50%, oklch(0.15 0.05 80 / 0.6), oklch(0.10 0.01 50 / 0.8))"
+      : "radial-gradient(ellipse at 0% 50%, oklch(0.92 0.12 85 / 0.65), oklch(var(--card)) 75%)",
+    ticketWinnerBoxShadow: isDark
+      ? "0 0 20px oklch(0.72 0.18 80 / 0.2)"
+      : "0 4px 24px oklch(0.55 0.12 80 / 0.14)",
+    winnerBadge: isDark
+      ? {
+          background: "oklch(0.72 0.18 80 / 0.15)",
+          color: "oklch(0.88 0.18 80)",
+        }
+      : {
+          background: "oklch(var(--primary) / 0.14)",
+          color: "oklch(var(--primary))",
+        },
+    ticketLoserBg: isDark
+      ? "oklch(0.10 0.01 50 / 0.7)"
+      : "oklch(var(--muted) / 0.45)",
+    ticketNumberMuted: isDark ? "oklch(0.14 0.01 50)" : "oklch(var(--muted))",
+    nextDrawCard: isDark
+      ? "oklch(0.10 0.02 80 / 0.4)"
+      : "oklch(var(--card) / 0.88)",
+    liveCtaCard: isDark
+      ? "oklch(0.11 0.03 80 / 0.4)"
+      : "oklch(var(--card) / 0.88)",
+  };
+}
 
 // ── Starfield component ────────────────────────────────────────────────────────
 const STAR_COUNT = 60;
@@ -25,6 +94,9 @@ const STARS = Array.from({ length: STAR_COUNT }, (_, i) => ({
 }));
 
 function Starfield() {
+  const { isDark } = useTheme();
+  if (!isDark) return null;
+
   return (
     <div
       className="absolute inset-0 overflow-hidden pointer-events-none"
@@ -76,11 +148,16 @@ function GoldBall({
   delay?: number;
   animate?: boolean;
 }) {
+  const { isDark } = useTheme();
   const sizeMap = {
     sm: "w-10 h-10 text-sm",
     md: "w-12 h-12 text-base",
     lg: "w-16 h-16 text-xl",
   };
+
+  const ballShadow = isDark
+    ? "0 0 20px oklch(0.72 0.18 80 / 0.5), 0 4px 12px oklch(0 0 0 / 0.4), inset 0 1px 0 oklch(1 0 0 / 0.3)"
+    : "0 0 18px oklch(0.65 0.14 80 / 0.45), 0 4px 10px oklch(0 0 0 / 0.12), inset 0 1px 0 oklch(1 0 0 / 0.45)";
 
   return (
     <div
@@ -93,8 +170,7 @@ function GoldBall({
       style={{
         background:
           "radial-gradient(circle at 35% 35%, oklch(0.88 0.18 80), oklch(0.65 0.18 65) 55%, oklch(0.45 0.14 60))",
-        boxShadow:
-          "0 0 20px oklch(0.72 0.18 80 / 0.5), 0 4px 12px oklch(0 0 0 / 0.4), inset 0 1px 0 oklch(1 0 0 / 0.3)",
+        boxShadow: ballShadow,
         animationDelay: `${delay}s`,
       }}
       data-ocid={`draw.gold_ball.${number}`}
@@ -149,6 +225,17 @@ const ORBIT_BALLS = [
 
 function BallMachine({ spinning }: { spinning: boolean }) {
   const { t } = useLanguage();
+  const { isDark } = useTheme();
+
+  const machineBg = isDark
+    ? "radial-gradient(ellipse at 30% 30%, oklch(0.16 0.03 80 / 0.8), oklch(0.08 0.01 50) 70%)"
+    : "radial-gradient(ellipse at 30% 30%, oklch(0.99 0.02 80 / 0.95), oklch(0.9 0.04 78) 72%)";
+  const machineShadow = isDark
+    ? "0 0 40px oklch(0.72 0.18 80 / 0.3), 0 0 80px oklch(0.72 0.18 80 / 0.15), inset 0 0 30px oklch(0 0 0 / 0.5)"
+    : "0 0 28px oklch(0.72 0.16 80 / 0.2), 0 8px 32px oklch(0 0 0 / 0.08), inset 0 0 24px oklch(1 0 0 / 0.65)";
+  const centerGlow = isDark
+    ? "radial-gradient(circle, oklch(0.72 0.18 80 / 0.3), transparent 70%)"
+    : "radial-gradient(circle, oklch(0.72 0.18 80 / 0.22), transparent 70%)";
 
   return (
     <div className="flex flex-col items-center gap-6">
@@ -159,10 +246,8 @@ function BallMachine({ spinning }: { spinning: boolean }) {
           spinning && "animate-glow-pulse",
         )}
         style={{
-          background:
-            "radial-gradient(ellipse at 30% 30%, oklch(0.16 0.03 80 / 0.8), oklch(0.08 0.01 50) 70%)",
-          boxShadow:
-            "0 0 40px oklch(0.72 0.18 80 / 0.3), 0 0 80px oklch(0.72 0.18 80 / 0.15), inset 0 0 30px oklch(0 0 0 / 0.5)",
+          background: machineBg,
+          boxShadow: machineShadow,
         }}
         data-ocid="draw.ball_machine"
       >
@@ -205,8 +290,7 @@ function BallMachine({ spinning }: { spinning: boolean }) {
         <div
           className="w-16 h-16 rounded-full flex items-center justify-center"
           style={{
-            background:
-              "radial-gradient(circle, oklch(0.72 0.18 80 / 0.3), transparent 70%)",
+            background: centerGlow,
           }}
         >
           <span className="text-3xl" aria-hidden="true">
@@ -246,6 +330,8 @@ export default function DrawPage() {
   const navigate = useNavigate();
   const { t } = useLanguage();
   const { draws, tickets } = useMockData();
+  const { isDark } = useTheme();
+  const s = useMemo(() => getDrawPageSurfaces(isDark), [isDark]);
 
   const draw = draws.find((d) => d.id === drawId) ?? draws[0];
   const userTickets = tickets.filter((tk) => tk.drawId === draw.id);
@@ -342,7 +428,7 @@ export default function DrawPage() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 z-40 flex items-center justify-center"
-            style={{ background: "oklch(0.06 0.01 50 / 0.9)" }}
+            style={{ background: s.megaWinOverlay }}
             data-ocid="draw.mega_win_overlay"
           >
             <motion.div
@@ -381,13 +467,10 @@ export default function DrawPage() {
         )}
       </AnimatePresence>
 
-      {/* Page wrapper — always dark/cinematic */}
+      {/* Page wrapper — cinematic; palette follows global theme */}
       <div
         className="min-h-screen relative overflow-x-hidden"
-        style={{
-          background:
-            "radial-gradient(ellipse at 50% 0%, oklch(0.14 0.04 80 / 0.5) 0%, oklch(0.07 0.01 50) 60%)",
-        }}
+        style={{ background: s.pageBackground }}
         data-ocid="draw.page"
       >
         <Starfield />
@@ -396,7 +479,7 @@ export default function DrawPage() {
         <header
           className="sticky top-0 z-20 border-b border-primary/20 px-4 py-3 flex items-center gap-3"
           style={{
-            background: "oklch(0.09 0.01 50 / 0.9)",
+            background: s.headerBackground,
             backdropFilter: "blur(12px)",
           }}
         >
@@ -454,7 +537,7 @@ export default function DrawPage() {
                     className="font-display text-6xl font-black"
                     style={{
                       color: "oklch(0.88 0.18 80)",
-                      textShadow: "0 0 40px oklch(0.72 0.18 80 / 0.4)",
+                      textShadow: s.jackpotGoldShadow,
                     }}
                   >
                     {draw.jackpotFormatted}
@@ -468,7 +551,7 @@ export default function DrawPage() {
                 <div
                   className="rounded-2xl border border-primary/20 p-6 text-center w-full"
                   style={{
-                    background: "oklch(0.12 0.02 80 / 0.5)",
+                    background: s.countdownCard,
                     backdropFilter: "blur(8px)",
                   }}
                   data-ocid="draw.countdown_card"
@@ -586,7 +669,7 @@ export default function DrawPage() {
                     <div
                       key={`placeholder-${n}`}
                       className="w-16 h-16 rounded-full border-2 border-primary/20 flex items-center justify-center animate-pulse"
-                      style={{ background: "oklch(0.12 0.02 80 / 0.4)" }}
+                      style={{ background: s.revealPlaceholder }}
                       aria-hidden="true"
                     >
                       <span className="text-primary/30 font-mono text-xl font-bold">
@@ -615,11 +698,7 @@ export default function DrawPage() {
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ type: "spring", stiffness: 200 }}
                     className="rounded-2xl border border-primary/50 p-5 text-center"
-                    style={{
-                      background:
-                        "radial-gradient(ellipse at 50% 0%, oklch(0.18 0.06 80 / 0.8), oklch(0.1 0.02 80 / 0.4))",
-                      boxShadow: "0 0 40px oklch(0.72 0.18 80 / 0.3)",
-                    }}
+                    style={s.winBanner}
                     data-ocid="draw.win_banner"
                   >
                     <p className="text-4xl mb-2" aria-hidden="true">
@@ -650,7 +729,7 @@ export default function DrawPage() {
                   transition={{ delay: 0.1 }}
                   className="rounded-2xl border border-primary/20 p-6 text-center"
                   style={{
-                    background: "oklch(0.11 0.02 80 / 0.6)",
+                    background: s.jackpotCard,
                     backdropFilter: "blur(8px)",
                   }}
                   data-ocid="draw.jackpot_card"
@@ -662,7 +741,7 @@ export default function DrawPage() {
                     className="font-display text-5xl font-black"
                     style={{
                       color: "oklch(0.88 0.18 80)",
-                      textShadow: "0 0 30px oklch(0.72 0.18 80 / 0.3)",
+                      textShadow: s.jackpotCardGoldShadow,
                     }}
                   >
                     {draw.jackpotFormatted}
@@ -708,7 +787,7 @@ export default function DrawPage() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.4 }}
                   className="rounded-2xl border border-border/40 overflow-hidden"
-                  style={{ background: "oklch(0.10 0.01 50 / 0.7)" }}
+                  style={{ background: s.resultsTable }}
                   data-ocid="draw.results_table"
                 >
                   <div className="px-4 py-3 border-b border-border/30">
@@ -774,11 +853,11 @@ export default function DrawPage() {
                           style={{
                             background:
                               ticket.status === "Winner"
-                                ? "radial-gradient(ellipse at 0% 50%, oklch(0.15 0.05 80 / 0.6), oklch(0.10 0.01 50 / 0.8))"
-                                : "oklch(0.10 0.01 50 / 0.7)",
+                                ? s.ticketWinnerBg
+                                : s.ticketLoserBg,
                             boxShadow:
                               ticket.status === "Winner"
-                                ? "0 0 20px oklch(0.72 0.18 80 / 0.2)"
+                                ? s.ticketWinnerBoxShadow
                                 : undefined,
                           }}
                           data-ocid={`draw.user_ticket.${i + 1}`}
@@ -790,10 +869,7 @@ export default function DrawPage() {
                             {ticket.status === "Winner" && (
                               <span
                                 className="text-xs px-2.5 py-1 rounded-full font-body font-semibold border border-primary/40"
-                                style={{
-                                  background: "oklch(0.72 0.18 80 / 0.15)",
-                                  color: "oklch(0.88 0.18 80)",
-                                }}
+                                style={s.winnerBadge}
                               >
                                 🏆 {t("¡Ganaste!", "Winner!")}
                               </span>
@@ -808,7 +884,9 @@ export default function DrawPage() {
                                 <div
                                   key={n}
                                   className="w-10 h-10 rounded-full flex items-center justify-center border border-border/40 font-mono text-sm font-bold text-muted-foreground"
-                                  style={{ background: "oklch(0.14 0.01 50)" }}
+                                  style={{
+                                    background: s.ticketNumberMuted,
+                                  }}
                                 >
                                   {n}
                                 </div>
@@ -860,7 +938,7 @@ export default function DrawPage() {
                   animate={{ opacity: 1 }}
                   transition={{ delay: 0.7 }}
                   className="rounded-2xl border border-border/30 p-5 text-center"
-                  style={{ background: "oklch(0.10 0.02 80 / 0.4)" }}
+                  style={{ background: s.nextDrawCard }}
                   data-ocid="draw.next_draw_card"
                 >
                   <p className="font-body text-xs uppercase tracking-widest text-muted-foreground mb-3">
@@ -901,7 +979,7 @@ export default function DrawPage() {
               transition={{ delay: 0.3 }}
               className="rounded-2xl border border-primary/30 p-6 text-center"
               style={{
-                background: "oklch(0.11 0.03 80 / 0.4)",
+                background: s.liveCtaCard,
                 backdropFilter: "blur(8px)",
               }}
               data-ocid="draw.live_cta"

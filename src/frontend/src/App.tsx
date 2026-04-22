@@ -19,6 +19,7 @@ const OnboardingPage = lazy(() => import("@/pages/OnboardingPage"));
 const HomePage = lazy(() => import("@/pages/HomePage"));
 const PurchasePage = lazy(() => import("@/pages/PurchasePage"));
 const WalletPage = lazy(() => import("@/pages/WalletPage"));
+const WalletDepositPage = lazy(() => import("@/pages/WalletDepositPage"));
 const DrawPage = lazy(() => import("@/pages/DrawPage"));
 const PrizePage = lazy(() => import("@/pages/PrizePage"));
 const MapPage = lazy(() => import("@/pages/MapPage"));
@@ -26,6 +27,10 @@ const POSPage = lazy(() => import("@/pages/POSPage"));
 const CommunityPage = lazy(() => import("@/pages/CommunityPage"));
 const ProfilePage = lazy(() => import("@/pages/ProfilePage"));
 const HelpPage = lazy(() => import("@/pages/HelpPage"));
+const AdminPage = lazy(() => import("@/pages/AdminPage"));
+const CreateLotteryWizardPage = lazy(
+  () => import("@/pages/admin/CreateLotteryWizardPage"),
+);
 
 // ── Page loader skeleton ───────────────────────────────────────────────────────
 function PageLoader() {
@@ -78,6 +83,12 @@ const purchaseRoute = createRoute({
   component: () => <PurchasePage />,
 });
 
+const walletDepositRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/wallet/deposit",
+  component: () => <WalletDepositPage />,
+});
+
 const walletRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/wallet",
@@ -126,12 +137,25 @@ const helpRoute = createRoute({
   component: () => <HelpPage />,
 });
 
+const adminRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/admin",
+  component: () => <AdminPage />,
+});
+
+const adminNewLotteryRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/admin/lotteries/new",
+  component: () => <CreateLotteryWizardPage />,
+});
+
 // ── Router ─────────────────────────────────────────────────────────────────────
 const routeTree = rootRoute.addChildren([
   indexRoute,
   onboardingRoute,
   homeRoute,
   purchaseRoute,
+  walletDepositRoute,
   walletRoute,
   drawRoute,
   prizeRoute,
@@ -140,6 +164,8 @@ const routeTree = rootRoute.addChildren([
   communityRoute,
   profileRoute,
   helpRoute,
+  adminRoute,
+  adminNewLotteryRoute,
 ]);
 
 const router = createRouter({ routeTree });

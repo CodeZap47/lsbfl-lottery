@@ -43,11 +43,24 @@ function CountUp({
     return controls.stop;
   }, [count, target, duration]);
 
+  const reserveText = prefix + target.toLocaleString("en-US") + suffix;
+
   return (
-    <span ref={ref}>
-      {prefix}
-      <motion.span>{rounded}</motion.span>
-      {suffix}
+    <span
+      ref={ref}
+      className="inline-grid grid-cols-1 justify-items-center whitespace-nowrap"
+    >
+      <span
+        className="col-start-1 row-start-1 invisible select-none"
+        aria-hidden
+      >
+        {reserveText}
+      </span>
+      <span className="col-start-1 row-start-1">
+        {prefix}
+        <motion.span className="tabular-nums">{rounded}</motion.span>
+        {suffix}
+      </span>
     </span>
   );
 }
@@ -161,7 +174,7 @@ export default function HomePage() {
   const { lotteries, tickets } = useMockData();
   const navigate = useNavigate();
 
-  const megaJackpot = 12_500_000;
+  const megaJackpot = 1_233_000_000;
   const megaLottery = lotteries[0];
   const upcomingTickets = tickets.filter(
     (tk) => tk.status === "Active" || tk.status === "InDraw",
@@ -187,7 +200,7 @@ export default function HomePage() {
           <div className="absolute bottom-0 left-0 w-56 h-56 rounded-full bg-primary/10 blur-3xl" />
         </div>
 
-        <div className="relative max-w-lg mx-auto">
+        <div className="relative max-w-2xl mx-auto">
           {/* Mega jackpot card */}
           <motion.div
             initial={{ opacity: 0, y: 28 }}
@@ -299,7 +312,7 @@ export default function HomePage() {
       >
         <div className="max-w-lg mx-auto">
           <nav
-            className="flex gap-3 overflow-x-auto pb-1 scrollbar-none"
+            className="flex justify-center gap-3 overflow-x-auto pb-1 scrollbar-none"
             style={{ scrollbarWidth: "none" }}
             aria-label={t("Acciones rápidas", "Quick actions")}
           >
@@ -337,9 +350,9 @@ export default function HomePage() {
         className="py-7 bg-background"
         data-ocid="home.lotteries_section"
       >
-        <div className="max-w-lg mx-auto">
+        <div className="max-w-lg mx-auto lg:max-w-none lg:mx-0">
           {/* Section header */}
-          <div className="flex items-center justify-between px-4 mb-4">
+          <div className="flex items-center justify-between px-4 lg:px-6 mb-4">
             <h2 className="font-display text-xl font-bold text-foreground">
               ✦ {t("Sorteos activos", "Active draws")}
             </h2>
@@ -355,7 +368,7 @@ export default function HomePage() {
 
           {/* Horizontal scroll container */}
           <ul
-            className="flex gap-4 overflow-x-auto px-4 pb-2 scrollbar-none snap-x snap-mandatory list-none"
+            className="flex gap-4 overflow-x-auto px-4 lg:px-6 pb-2 scrollbar-none snap-x snap-mandatory list-none"
             style={{ scrollbarWidth: "none" }}
             aria-label={t("Carrusel de sorteos", "Lottery carousel")}
           >
@@ -366,16 +379,13 @@ export default function HomePage() {
                 whileInView={{ opacity: 1, x: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.08, duration: 0.4 }}
-                className="min-w-[260px] max-w-[280px] snap-start"
+                className="min-w-[300px] max-w-[320px] snap-start"
                 data-ocid={`home.lottery_carousel_item.${i + 1}`}
               >
                 <LotteryCard
                   lottery={lottery}
-                  variant={lottery.type === "NoLoss" ? "stack" : "flat"}
                   className={
-                    lottery.type === "NoLoss"
-                      ? "border-secondary/40 hover:border-secondary/70 hover:shadow-glow-green"
-                      : ""
+                    lottery.type === "NoLoss" ? "border-secondary/40" : ""
                   }
                 />
               </motion.li>

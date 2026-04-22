@@ -1,13 +1,25 @@
 import { GlowButton } from "@/components/ui/GlowButton";
+import { PAYOUT_OPTIONS } from "@/constants/payoutOptions";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useMockData } from "@/hooks/useMockData";
 import { useTheme } from "@/hooks/useTheme";
+import {
+  loadPayoutProfile,
+  savePayoutProfile,
+} from "@/lib/payoutProfileStorage";
+import {
+  loadProfileAccount,
+  saveProfileAccount,
+} from "@/lib/profileAccountStorage";
 import { cn } from "@/lib/utils";
+import type { PayoutProfile } from "@/types";
+import { Link } from "@tanstack/react-router";
 import {
   Bell,
   ChevronDown,
   Download,
   Globe,
+  LayoutDashboard,
   Mail,
   MapPin,
   Moon,
@@ -16,6 +28,7 @@ import {
   ShieldAlert,
   Sun,
   Trash2,
+  Wallet,
   X,
 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
@@ -26,6 +39,7 @@ import { toast } from "sonner";
 
 type SectionKey =
   | "account"
+  | "payout"
   | "notifications"
   | "appearance"
   | "responsible"
@@ -390,6 +404,11 @@ const COUNTRIES = [
 
 const CURRENCIES = ["USD", "MXN", "ARS", "COP", "EUR", "BTC", "ETH"];
 
+const ACCOUNT_STORAGE_OPTS = {
+  validCountryCodes: COUNTRIES.map((c) => c.code),
+  validCurrencies: CURRENCIES,
+} as const;
+
 export default function ProfilePage() {
   const { t, toggleLang, lang } = useLanguage();
   const { toggleTheme, isDark } = useTheme();
@@ -402,9 +421,43 @@ export default function ProfilePage() {
 
   // ── Edit mode
   const [editMode, setEditMode] = useState(false);
-  const [email, setEmail] = useState(user.email);
-  const [country, setCountry] = useState(user.countryCode);
-  const [currency, setCurrency] = useState(user.currency);
+  const [accountSnapshot] = useState(() =>
+    loadProfileAccount(
+      {
+        email: user.email,
+        countryCode: user.countryCode,
+        currency: user.currency,
+      },
+      ACCOUNT_STORAGE_OPTS,
+    ),
+  );
+  const [email, setEmail] = useState(accountSnapshot.email);
+  const [country, setCountry] = useState(accountSnapshot.countryCode);
+  const [currency, setCurrency] = useState(accountSnapshot.currency);
+
+  const handleEditProfileClick = () => {
+    setEditMode((wasEditing) => {
+      if (wasEditing) return false;
+      queueMicrotask(() => {
+        setOpenSection("account");
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            sectionRef.current?.scrollIntoView({
+              behavior: "smooth",
+              block: "start",
+            });
+          });
+        });
+      });
+      return true;
+    });
+  };
+
+  // ── Payout profile (localStorage)
+  const [payoutProfile, setPayoutProfile] = useState<PayoutProfile>(() =>
+    loadPayoutProfile(),
+  );
+  const [payoutEditMode, setPayoutEditMode] = useState(false);
 
   // ── Notifications
   const [notifs, setNotifs] = useState<NotifState>({
@@ -510,7 +563,7 @@ export default function ProfilePage() {
                   </div>
                   <button
                     type="button"
-                    onClick={() => setEditMode((v) => !v)}
+                    onClick={handleEditProfileClick}
                     data-ocid="profile.edit_button"
                     className={cn(
                       "shrink-0 w-9 h-9 rounded-xl flex items-center justify-center border transition-smooth mt-0.5",
@@ -518,6 +571,7 @@ export default function ProfilePage() {
                         ? "bg-primary/20 border-primary text-primary"
                         : "bg-muted/50 border-border text-muted-foreground hover:text-foreground hover:border-primary/50",
                     )}
+                    aria-pressed={editMode}
                     aria-label={t("Editar perfil", "Edit profile")}
                   >
                     <Pencil size={15} />
@@ -626,6 +680,33 @@ export default function ProfilePage() {
           </div>
         </div>
 
+        {/* ─── Admin shortcut ─────────────────────────────────────────────── */}
+        <div className="max-w-lg mx-auto px-4 pt-6">
+          <Link
+            to="/admin"
+            data-ocid="profile.admin_panel_link"
+            className="ticket-card flex items-center gap-4 p-4 border border-primary/25 bg-primary/5 hover:border-primary/45 hover:bg-primary/10 transition-smooth group"
+          >
+            <span className="shrink-0 w-11 h-11 rounded-xl bg-primary/15 border border-primary/30 flex items-center justify-center text-primary group-hover:shadow-glow-gold transition-smooth">
+              <LayoutDashboard size={22} aria-hidden />
+            </span>
+            <div className="min-w-0 flex-1 text-left">
+              <p className="font-display text-sm font-bold text-foreground">
+                {t("Panel de administración", "Administration panel")}
+              </p>
+              <p className="font-body text-xs text-muted-foreground mt-0.5">
+                {t(
+                  "Gestionar sorteos y vista operativa",
+                  "Manage draws and operational view",
+                )}
+              </p>
+            </div>
+            <span className="text-muted-foreground group-hover:text-primary text-sm font-body shrink-0">
+              →
+            </span>
+          </Link>
+        </div>
+
         {/* ─── Settings accordion ──────────────────────────────────────────── */}
         <div
           className="max-w-lg mx-auto px-4 pt-6 flex flex-col gap-3"
@@ -714,6 +795,11 @@ export default function ProfilePage() {
                     className="w-full"
                     data-ocid="profile.account.save_button"
                     onClick={() => {
+                      saveProfileAccount({
+                        email,
+                        countryCode: country,
+                        currency,
+                      });
                       setEditMode(false);
                       toast.success(
                         t("Cambios guardados ✓", "Changes saved ✓"),
@@ -723,6 +809,348 @@ export default function ProfilePage() {
                     {t("Guardar cambios", "Save changes")}
                   </GlowButton>
                 </motion.div>
+              )}
+            </div>
+          </SectionAccordion>
+
+          {/* ── Datos de cobro de premios ── */}
+          <SectionAccordion
+            id="payout"
+            label={t("Datos de cobro de premios", "Prize payout details")}
+            icon={<Wallet size={17} />}
+            open={openSection === "payout"}
+            onToggle={toggleSection}
+          >
+            <div
+              className="flex flex-col gap-4"
+              data-ocid="profile.payout.body"
+            >
+              <div className="flex items-start justify-between gap-2">
+                <p className="font-body text-xs text-muted-foreground leading-relaxed flex-1">
+                  {t(
+                    "Usaremos estos datos para liquidar premios ganadores. Puedes cambiarlos cuando quieras.",
+                    "We use this information to pay out prizes. You can update it anytime.",
+                  )}
+                </p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (payoutEditMode) {
+                      setPayoutProfile(loadPayoutProfile());
+                      setPayoutEditMode(false);
+                    } else {
+                      setPayoutEditMode(true);
+                    }
+                  }}
+                  data-ocid="profile.payout.edit_toggle"
+                  className={cn(
+                    "shrink-0 w-9 h-9 rounded-xl flex items-center justify-center border transition-smooth",
+                    payoutEditMode
+                      ? "bg-muted/80 border-border text-foreground"
+                      : "bg-muted/50 border-border text-muted-foreground hover:text-foreground hover:border-primary/50",
+                  )}
+                  aria-label={
+                    payoutEditMode
+                      ? t("Cancelar edición", "Cancel editing")
+                      : t("Editar datos de cobro", "Edit payout details")
+                  }
+                >
+                  {payoutEditMode ? <X size={15} /> : <Pencil size={15} />}
+                </button>
+              </div>
+
+              <div
+                className="flex flex-col gap-3"
+                data-ocid="profile.payout.contact_fields"
+              >
+                <p className={labelCls}>
+                  {t("Datos para liquidación", "Payout identity")}
+                </p>
+                <div>
+                  <label htmlFor="payout-contact-name" className={labelCls}>
+                    {t(
+                      "Nombre completo (como en identificación)",
+                      "Full name (as on ID)",
+                    )}
+                  </label>
+                  <input
+                    id="payout-contact-name"
+                    type="text"
+                    autoComplete="name"
+                    disabled={!payoutEditMode}
+                    value={payoutProfile.contactFullName}
+                    onChange={(e) =>
+                      setPayoutProfile((p) => ({
+                        ...p,
+                        contactFullName: e.target.value,
+                      }))
+                    }
+                    className={cn(
+                      inputCls,
+                      !payoutEditMode && "opacity-60 cursor-not-allowed",
+                    )}
+                    data-ocid="profile.payout.contact_name_input"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="payout-contact-phone" className={labelCls}>
+                    {t("Teléfono de contacto", "Contact phone")}
+                  </label>
+                  <input
+                    id="payout-contact-phone"
+                    type="tel"
+                    autoComplete="tel"
+                    disabled={!payoutEditMode}
+                    value={payoutProfile.contactPhone}
+                    onChange={(e) =>
+                      setPayoutProfile((p) => ({
+                        ...p,
+                        contactPhone: e.target.value,
+                      }))
+                    }
+                    placeholder={t(
+                      "Ej. +52 55 1234 5678",
+                      "e.g. +1 415 555 0100",
+                    )}
+                    className={cn(
+                      inputCls,
+                      !payoutEditMode && "opacity-60 cursor-not-allowed",
+                    )}
+                    data-ocid="profile.payout.contact_phone_input"
+                  />
+                </div>
+              </div>
+
+              <div data-ocid="profile.payout.method_list">
+                <p className={labelCls}>
+                  {t("Método preferido", "Preferred method")}
+                </p>
+                <div className="flex flex-col gap-2 mt-2">
+                  {PAYOUT_OPTIONS.map((opt) => {
+                    const isSel = payoutProfile.preferredMethod === opt.key;
+                    return (
+                      <button
+                        key={opt.key}
+                        type="button"
+                        disabled={!payoutEditMode}
+                        onClick={() =>
+                          setPayoutProfile((p) => ({
+                            ...p,
+                            preferredMethod: opt.key,
+                          }))
+                        }
+                        data-ocid={`profile.payout.method_${opt.key}`}
+                        className={cn(
+                          "w-full ticket-card p-3 border text-left transition-smooth flex items-center gap-3 rounded-xl",
+                          isSel
+                            ? "border-primary/60 bg-primary/10"
+                            : "border-border bg-card/80",
+                          !payoutEditMode && "opacity-70 cursor-not-allowed",
+                        )}
+                      >
+                        <span className="text-2xl shrink-0">{opt.icon}</span>
+                        <div className="min-w-0 flex-1">
+                          <p className="font-display text-sm font-bold text-foreground">
+                            {t(opt.titleEs, opt.titleEn)}
+                          </p>
+                          <p className="font-body text-[11px] text-muted-foreground">
+                            {t(opt.subtitleEs, opt.subtitleEn)}
+                          </p>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {payoutProfile.preferredMethod === "Wallet" && (
+                <div
+                  className="rounded-xl bg-muted/40 border border-border px-4 py-3"
+                  data-ocid="profile.payout.wallet_info"
+                >
+                  <p className="font-body text-sm text-foreground leading-relaxed">
+                    {t(
+                      "Los premios en cartera digital se acreditan a tu saldo LSBFL de forma instantánea.",
+                      "Digital wallet prizes are credited to your LSBFL balance instantly.",
+                    )}
+                  </p>
+                </div>
+              )}
+
+              {payoutProfile.preferredMethod === "BankTransfer" && (
+                <div
+                  className="flex flex-col gap-3"
+                  data-ocid="profile.payout.bank_fields"
+                >
+                  <div>
+                    <label htmlFor="payout-bank-holder" className={labelCls}>
+                      {t("Titular de la cuenta", "Account holder")}
+                    </label>
+                    <input
+                      id="payout-bank-holder"
+                      type="text"
+                      disabled={!payoutEditMode}
+                      value={payoutProfile.bank.accountHolder}
+                      onChange={(e) =>
+                        setPayoutProfile((p) => ({
+                          ...p,
+                          bank: {
+                            ...p.bank,
+                            accountHolder: e.target.value,
+                          },
+                        }))
+                      }
+                      className={cn(
+                        inputCls,
+                        !payoutEditMode && "opacity-60 cursor-not-allowed",
+                      )}
+                      data-ocid="profile.payout.bank_holder_input"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="payout-bank-name" className={labelCls}>
+                      {t("Banco", "Bank name")}
+                    </label>
+                    <input
+                      id="payout-bank-name"
+                      type="text"
+                      disabled={!payoutEditMode}
+                      value={payoutProfile.bank.bankName}
+                      onChange={(e) =>
+                        setPayoutProfile((p) => ({
+                          ...p,
+                          bank: { ...p.bank, bankName: e.target.value },
+                        }))
+                      }
+                      className={cn(
+                        inputCls,
+                        !payoutEditMode && "opacity-60 cursor-not-allowed",
+                      )}
+                      data-ocid="profile.payout.bank_name_input"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="payout-clabe" className={labelCls}>
+                      {t("CLABE / IBAN / cuenta", "CLABE / IBAN / account")}
+                    </label>
+                    <input
+                      id="payout-clabe"
+                      type="text"
+                      inputMode="numeric"
+                      autoComplete="off"
+                      disabled={!payoutEditMode}
+                      value={payoutProfile.bank.clabeOrIban}
+                      onChange={(e) =>
+                        setPayoutProfile((p) => ({
+                          ...p,
+                          bank: { ...p.bank, clabeOrIban: e.target.value },
+                        }))
+                      }
+                      className={cn(
+                        inputCls,
+                        !payoutEditMode && "opacity-60 cursor-not-allowed",
+                      )}
+                      data-ocid="profile.payout.bank_clabe_input"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="payout-tax" className={labelCls}>
+                      {t("RFC / ID fiscal (opcional)", "Tax ID (optional)")}
+                    </label>
+                    <input
+                      id="payout-tax"
+                      type="text"
+                      disabled={!payoutEditMode}
+                      value={payoutProfile.bank.taxId ?? ""}
+                      onChange={(e) =>
+                        setPayoutProfile((p) => ({
+                          ...p,
+                          bank: { ...p.bank, taxId: e.target.value },
+                        }))
+                      }
+                      className={cn(
+                        inputCls,
+                        !payoutEditMode && "opacity-60 cursor-not-allowed",
+                      )}
+                      data-ocid="profile.payout.bank_tax_input"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {payoutProfile.preferredMethod === "StoreCredit" && (
+                <div
+                  className="flex flex-col gap-3"
+                  data-ocid="profile.payout.store_fields"
+                >
+                  <div>
+                    <label htmlFor="payout-city" className={labelCls}>
+                      {t("Ciudad o zona preferida", "Preferred city or area")}
+                    </label>
+                    <input
+                      id="payout-city"
+                      type="text"
+                      disabled={!payoutEditMode}
+                      value={payoutProfile.preferredCity}
+                      onChange={(e) =>
+                        setPayoutProfile((p) => ({
+                          ...p,
+                          preferredCity: e.target.value,
+                        }))
+                      }
+                      placeholder={t("Ej. CDMX", "e.g. Mexico City")}
+                      className={cn(
+                        inputCls,
+                        !payoutEditMode && "opacity-60 cursor-not-allowed",
+                      )}
+                      data-ocid="profile.payout.store_city_input"
+                    />
+                  </div>
+                  <Link
+                    to="/map"
+                    className="inline-flex items-center gap-2 font-body text-sm text-primary font-semibold hover:underline"
+                    data-ocid="profile.payout.store_map_link"
+                  >
+                    {t("Ver mapa de tiendas", "View store map")} →
+                  </Link>
+                </div>
+              )}
+
+              <div className="flex items-start gap-2 rounded-xl bg-muted/30 border border-border px-3 py-2.5">
+                <ShieldAlert
+                  size={14}
+                  className="text-muted-foreground shrink-0 mt-0.5"
+                />
+                <p className="font-body text-[11px] text-muted-foreground leading-relaxed">
+                  {t(
+                    "Datos sensibles: solo para liquidación de premios, no se comparten con fines publicitarios.",
+                    "Sensitive data: used for prize payouts only, not for marketing.",
+                  )}
+                </p>
+              </div>
+
+              {payoutEditMode && (
+                <div className="flex flex-col gap-2 pt-1">
+                  <GlowButton
+                    type="button"
+                    variant="gold"
+                    size="md"
+                    className="w-full"
+                    data-ocid="profile.payout.save_button"
+                    onClick={() => {
+                      savePayoutProfile(payoutProfile);
+                      setPayoutEditMode(false);
+                      toast.success(
+                        t(
+                          "Datos de cobro guardados ✓",
+                          "Payout details saved ✓",
+                        ),
+                      );
+                    }}
+                  >
+                    {t("Guardar datos de cobro", "Save payout details")}
+                  </GlowButton>
+                </div>
               )}
             </div>
           </SectionAccordion>

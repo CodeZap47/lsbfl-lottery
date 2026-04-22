@@ -4,8 +4,9 @@ import { useLanguage } from "@/hooks/useLanguage";
 import { useMockData } from "@/hooks/useMockData";
 import { cn } from "@/lib/utils";
 import type { Ticket, TicketStatus } from "@/types";
-import { Link } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import {
+  Banknote,
   Check,
   Copy,
   Gift,
@@ -97,7 +98,14 @@ function GiftModal({
     setCopied(true);
     setTimeout(() => setCopied(false), 2500);
     toast.success(t("¡Enlace copiado!", "Link copied!"), {
-      description: mockLink,
+      description: (
+        <span
+          className="block max-w-full truncate font-mono text-xs opacity-90"
+          title={mockLink}
+        >
+          {mockLink}
+        </span>
+      ),
       duration: 4000,
     });
   }
@@ -107,8 +115,16 @@ function GiftModal({
       inputRef.current?.focus();
       return;
     }
-    toast.success(t("¡Boleto enviado! 🎁", "Ticket sent! 🎁"), {
-      description: t(`Enviado a ${recipient}`, `Sent to ${recipient}`),
+    const handle = recipient.trim().replace(/^@+/, "");
+    toast.success(t("¡Boleto enviado!", "Ticket sent!"), {
+      description: (
+        <span className="flex flex-wrap items-center gap-x-1.5 gap-y-1">
+          <span>{t("Enviado a", "Sent to")}</span>
+          <span className="inline-flex max-w-[min(100%,12rem)] items-center truncate rounded-md bg-primary/15 px-2 py-0.5 font-mono text-xs font-semibold text-primary">
+            @{handle}
+          </span>
+        </span>
+      ),
       duration: 5000,
     });
     onClose();
@@ -274,26 +290,38 @@ function WalletTicketCard({
         </div>
       )}
 
-      <div className="relative z-[1] pt-1">
+      <div className={cn("relative z-[1]", isWinner ? "pt-2.5" : "pt-1")}>
         <TicketCard ticket={ticket} />
       </div>
 
-      {/* Gift CTA — shown below card, always accessible */}
+      {/* Gift vs claim — winners go to prize flow */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: index * 0.07 + 0.2 }}
         className="flex justify-end mt-1.5 px-1"
       >
-        <button
-          type="button"
-          onClick={() => onGift(ticket)}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-muted/50 border border-border text-xs font-body text-muted-foreground hover:border-primary/40 hover:text-primary transition-smooth"
-          data-ocid={`wallet.gift_button.${index + 1}`}
-        >
-          <Gift className="w-3 h-3" />
-          {t("Regalar", "Gift")}
-        </button>
+        {isWinner ? (
+          <Link
+            to="/prize/$ticketId"
+            params={{ ticketId: ticket.id }}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary/15 border border-primary/40 text-xs font-body font-semibold text-primary hover:border-primary hover:bg-primary/20 transition-smooth"
+            data-ocid={`wallet.claim_button.${index + 1}`}
+          >
+            <Banknote className="w-3 h-3" />
+            {t("Cobrar", "Claim")}
+          </Link>
+        ) : (
+          <button
+            type="button"
+            onClick={() => onGift(ticket)}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-muted/50 border border-border text-xs font-body text-muted-foreground hover:border-primary/40 hover:text-primary transition-smooth"
+            data-ocid={`wallet.gift_button.${index + 1}`}
+          >
+            <Gift className="w-3 h-3" />
+            {t("Regalar", "Gift")}
+          </button>
+        )}
       </motion.div>
     </motion.div>
   );
@@ -303,6 +331,7 @@ function WalletTicketCard({
 
 export default function WalletPage() {
   const { t } = useLanguage();
+  const navigate = useNavigate();
   const { tickets, user } = useMockData();
 
   const [filter, setFilter] = useState<FilterKey>("All");
@@ -324,25 +353,20 @@ export default function WalletPage() {
     <div className="min-h-screen bg-background" data-ocid="wallet.page">
       {/* ── Page Header ── */}
       <div className="bg-card border-b border-border">
-        <div className="max-w-lg mx-auto px-4 pt-5 pb-4">
-          <div className="flex items-start justify-between mb-4">
-            <div>
-              <h1 className="font-display text-2xl font-black text-foreground leading-tight">
-                {t("Mis Boletos", "My Tickets")}
-              </h1>
-              <p className="font-body text-sm text-muted-foreground mt-0.5">
-                {activeCount} {t("boletos activos", "active tickets")}
-                {winnerCount > 0 && (
-                  <span className="text-primary font-semibold">
-                    {" "}
-                    · {winnerCount} {t("ganador", "winner")}
-                  </span>
-                )}
-              </p>
-            </div>
-            <span className="text-3xl mt-1" aria-hidden="true">
-              🎟️
-            </span>
+        <div className="max-w-2xl mx-auto px-4 pt-5 pb-4">
+          <div className="mb-4">
+            <h1 className="font-display text-2xl font-black text-foreground leading-tight">
+              {t("Mis Boletos", "My Tickets")}
+            </h1>
+            <p className="font-body text-sm text-muted-foreground mt-0.5">
+              {activeCount} {t("boletos activos", "active tickets")}
+              {winnerCount > 0 && (
+                <span className="text-primary font-semibold">
+                  {" "}
+                  · {winnerCount} {t("ganador", "winner")}
+                </span>
+              )}
+            </p>
           </div>
 
           {/* Stats row */}
@@ -368,7 +392,7 @@ export default function WalletPage() {
       </div>
 
       {/* ── Content ── */}
-      <div className="max-w-lg mx-auto px-4 py-5">
+      <div className="max-w-2xl mx-auto px-4 py-5">
         {/* Balance card */}
         <motion.div
           initial={{ opacity: 0, y: 12 }}
@@ -397,6 +421,7 @@ export default function WalletPage() {
             variant="outline"
             size="sm"
             data-ocid="wallet.add_funds_button"
+            onClick={() => navigate({ to: "/wallet/deposit" })}
           >
             {t("Recargar", "Add Funds")}
           </GlowButton>
@@ -530,7 +555,7 @@ export default function WalletPage() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="grid grid-cols-1 sm:grid-cols-2 gap-5"
+              className="grid grid-cols-1 md:grid-cols-2 gap-5"
             >
               {filtered.map((ticket, i) => (
                 <WalletTicketCard

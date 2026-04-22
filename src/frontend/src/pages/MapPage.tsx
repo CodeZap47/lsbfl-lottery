@@ -3,6 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useMockData } from "@/hooks/useMockData";
+import { useTheme } from "@/hooks/useTheme";
 import { cn } from "@/lib/utils";
 import type { Store } from "@/types";
 import { Link } from "@tanstack/react-router";
@@ -37,6 +38,9 @@ type ViewMode = "map" | "list";
 // ─── Constants ─────────────────────────────────────────────────────────────────
 
 const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN as string | undefined;
+
+const MAPBOX_STYLE_DARK = "mapbox://styles/mapbox/dark-v11" as const;
+const MAPBOX_STYLE_LIGHT = "mapbox://styles/mapbox/light-v11" as const;
 
 const MOCK_DISTANCES: Record<string, string> = {
   "store-001": "2.3 km",
@@ -97,6 +101,17 @@ function MapboxView({
   const mapRef = useRef<mapboxgl.Map | null>(null);
   const markersRef = useRef<Map<string, mapboxgl.Marker>>(new Map());
   const userMarkerRef = useRef<mapboxgl.Marker | null>(null);
+  const skipNextThemeStyleSync = useRef(true);
+
+  const { isDark } = useTheme();
+  const mapStyleUrl = isDark ? MAPBOX_STYLE_DARK : MAPBOX_STYLE_LIGHT;
+
+  /** Captured on first mount so the map is created once with the correct light/dark basemap */
+  const [mapStyleOnMount] = useState<"dark" | "light">(() =>
+    isDark ? "dark" : "light",
+  );
+  const styleAtMount =
+    mapStyleOnMount === "dark" ? MAPBOX_STYLE_DARK : MAPBOX_STYLE_LIGHT;
 
   // Initialize map
   useEffect(() => {
@@ -106,7 +121,7 @@ function MapboxView({
 
     const map = new mapboxgl.Map({
       container: mapContainerRef.current,
-      style: "mapbox://styles/mapbox/dark-v11",
+      style: styleAtMount,
       center: [-80, -5],
       zoom: 2.5,
       attributionControl: false,
@@ -133,7 +148,18 @@ function MapboxView({
       map.remove();
       mapRef.current = null;
     };
-  }, []);
+  }, [styleAtMount]);
+
+  // When app theme changes (día / noche), swap Mapbox basemap without remounting the map
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    if (skipNextThemeStyleSync.current) {
+      skipNextThemeStyleSync.current = false;
+      return;
+    }
+    map.setStyle(mapStyleUrl);
+  }, [mapStyleUrl]);
 
   // Snapshot initial stores list for the one-time fit-bounds on mount
   const initialStoresRef = useRef(stores);

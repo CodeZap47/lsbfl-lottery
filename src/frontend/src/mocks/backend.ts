@@ -1,5 +1,18 @@
 import type { backendInterface } from "../backend";
-import { BadgeType, ClaimStatus, DrawStatus, LotteryType, PayoutMethod, TicketStatus } from "../backend";
+import {
+  BadgeType,
+  ClaimStatus,
+  DrawStatus,
+  LotteryType,
+  PayoutMethod,
+  TicketStatus,
+} from "../backend";
+import type {
+  AdminPublishLotteryResult,
+  AdminUpsertDraftResult,
+  DraftEntry,
+  LotteryProductConfig as CandidLotteryProductConfig,
+} from "../declarations/backend.did.d.ts";
 import { Principal } from "@icp-sdk/core/principal";
 
 const mockPrincipal = Principal.fromText("aaaaa-aa");
@@ -295,4 +308,20 @@ export const mockBackend: backendInterface = {
   updateSettings: async (_settings) => true,
 
   updateUserProfile: async (_name, _email, _country, _currency) => true,
+
+  adminBootstrap: async () => {},
+
+  adminIsCallerAuthorized: async (_caller) => true,
+
+  adminListDraftEntries: async (): Promise<Array<DraftEntry>> => [],
+
+  adminUpsertDraft: async (
+    _config: CandidLotteryProductConfig,
+  ): Promise<AdminUpsertDraftResult> => ({ ok: null }),
+
+  adminPublishLottery: async (
+    _slug: string,
+  ): Promise<AdminPublishLotteryResult> => ({
+    err: "mock_canister_publish",
+  }),
 };

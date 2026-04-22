@@ -1,9 +1,11 @@
 import { Confetti } from "@/components/ui/Confetti";
 import { GlowButton } from "@/components/ui/GlowButton";
+import { PAYOUT_OPTIONS } from "@/constants/payoutOptions";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useMockData } from "@/hooks/useMockData";
+import { loadPayoutProfile } from "@/lib/payoutProfileStorage";
 import { cn } from "@/lib/utils";
-import type { PayoutMethod } from "@/types";
+import type { PrizePayoutMethod } from "@/types";
 import { Link, useNavigate, useParams } from "@tanstack/react-router";
 import {
   ArrowLeft,
@@ -22,50 +24,6 @@ import { toast } from "sonner";
 // ── Types ──────────────────────────────────────────────────────────────────────
 
 type Step = "celebrate" | "payout" | "verify" | "confirmed";
-
-interface PayoutOption {
-  key: PayoutMethod;
-  icon: string;
-  titleEs: string;
-  titleEn: string;
-  subtitleEs: string;
-  subtitleEn: string;
-  linkEs?: string;
-  linkEn?: string;
-  linkTo?: string;
-}
-
-// ── Constants ──────────────────────────────────────────────────────────────────
-
-const PAYOUT_OPTIONS: PayoutOption[] = [
-  {
-    key: "Wallet",
-    icon: "💳",
-    titleEs: "Cartera digital",
-    titleEn: "Digital wallet",
-    subtitleEs: "Instantáneo",
-    subtitleEn: "Instant",
-  },
-  {
-    key: "BankTransfer",
-    icon: "🏦",
-    titleEs: "Transferencia bancaria",
-    titleEn: "Bank transfer",
-    subtitleEs: "2–5 días hábiles",
-    subtitleEn: "2–5 business days",
-  },
-  {
-    key: "StoreCredit",
-    icon: "🏪",
-    titleEs: "En tienda física",
-    titleEn: "At physical store",
-    subtitleEs: "Ver tiendas",
-    subtitleEn: "See stores",
-    linkEs: "Ver tiendas",
-    linkEn: "See stores",
-    linkTo: "/map",
-  },
-];
 
 // ── Subcomponents ──────────────────────────────────────────────────────────────
 
@@ -107,22 +65,15 @@ function FoilTicketCard({
 }) {
   return (
     <div
-      className="relative ticket-card border border-primary/40 overflow-hidden"
+      className={cn(
+        "relative ticket-card border overflow-hidden foil-ticket-surface",
+        "border-primary/25 dark:border-primary/40",
+      )}
       data-ocid="prize.foil_ticket_card"
-      style={{
-        background:
-          "linear-gradient(135deg, oklch(0.12 0.02 80) 0%, oklch(0.16 0.04 80) 40%, oklch(0.12 0.03 160) 100%)",
-      }}
     >
       {/* Foil shimmer overlay */}
       <div
-        className="absolute inset-0 pointer-events-none opacity-30"
-        style={{
-          background:
-            "linear-gradient(105deg, transparent 30%, oklch(0.72 0.18 80 / 0.5) 50%, transparent 70%)",
-          backgroundSize: "200% 100%",
-          animation: "shimmer 3s ease-in-out infinite",
-        }}
+        className="foil-ticket-shimmer absolute inset-0 pointer-events-none"
         aria-hidden="true"
       />
 
@@ -131,7 +82,7 @@ function FoilTicketCard({
         {Array.from({ length: 14 }, (_, i) => i).map((i) => (
           <div
             key={`top-perf-${i}`}
-            className="flex-1 h-[2px] rounded-full bg-primary/20"
+            className="flex-1 h-[2px] rounded-full bg-primary/12 dark:bg-primary/20"
           />
         ))}
       </div>
@@ -140,14 +91,14 @@ function FoilTicketCard({
         {/* Header */}
         <div className="flex items-start justify-between">
           <div>
-            <p className="font-body text-xs uppercase tracking-[0.25em] text-primary/70 mb-1">
+            <p className="font-body text-xs uppercase tracking-[0.25em] text-primary/80 dark:text-primary/70 mb-1">
               LSBFL · {t(ticket.lotteryNameEs, ticket.lotteryName)}
             </p>
-            <p className="font-mono text-xs text-muted-foreground/60">
+            <p className="font-mono text-xs text-muted-foreground/75 dark:text-muted-foreground/60">
               {ticket.serialCode}
             </p>
           </div>
-          <div className="flex items-center gap-1.5 bg-secondary/20 border border-secondary/30 rounded-xl px-3 py-1.5">
+          <div className="flex items-center gap-1.5 bg-secondary/15 border border-secondary/35 dark:bg-secondary/20 dark:border-secondary/30 rounded-xl px-3 py-1.5">
             <ShieldCheck size={13} className="text-secondary" />
             <span className="font-body text-xs font-semibold text-secondary">
               {t("Verificado", "Verified")}
@@ -163,7 +114,7 @@ function FoilTicketCard({
 
         {/* Draw date */}
         <div className="flex items-center justify-between text-xs font-mono">
-          <span className="text-muted-foreground/60">
+          <span className="text-muted-foreground/70 dark:text-muted-foreground/60">
             {t("Sorteo", "Draw")}:{" "}
             {new Date(ticket.drawDate).toLocaleDateString("es-MX", {
               day: "2-digit",
@@ -172,7 +123,7 @@ function FoilTicketCard({
             })}
           </span>
           {ticket.isPhygital && (
-            <span className="text-primary/60 flex items-center gap-1">
+            <span className="text-primary/70 dark:text-primary/60 flex items-center gap-1">
               <MapPin size={10} />
               {t("Phygital", "Phygital")}
             </span>
@@ -185,7 +136,7 @@ function FoilTicketCard({
         {Array.from({ length: 14 }, (_, i) => i).map((i) => (
           <div
             key={`bot-perf-${i}`}
-            className="flex-1 h-[2px] rounded-full bg-primary/20"
+            className="flex-1 h-[2px] rounded-full bg-primary/12 dark:bg-primary/20"
           />
         ))}
       </div>
@@ -366,8 +317,8 @@ function PayoutStep({
   prizeAmount,
   t,
 }: {
-  selected: PayoutMethod | null;
-  onSelect: (m: PayoutMethod) => void;
+  selected: PrizePayoutMethod | null;
+  onSelect: (m: PrizePayoutMethod) => void;
   onContinue: () => void;
   prizeAmount: number;
   t: (es: string, en: string) => string;
@@ -434,7 +385,7 @@ function PayoutStep({
                         to={opt.linkTo}
                         className="text-primary underline underline-offset-2 hover:text-primary/80"
                         onClick={(e) => e.stopPropagation()}
-                        data-ocid="prize.see_stores_link"
+                        data-ocid={`prize.payout_option_link.${opt.key}`}
                       >
                         {t(opt.linkEs ?? "", opt.linkEn ?? "")}
                       </Link>
@@ -635,15 +586,29 @@ function ConfirmedStep({
   prizeAmount,
   t,
 }: {
-  selectedPayout: PayoutMethod | null;
+  selectedPayout: PrizePayoutMethod | null;
   prizeAmount: number;
   t: (es: string, en: string) => string;
 }) {
   const navigate = useNavigate();
 
   const etaEs =
-    selectedPayout === "Wallet" ? "Instantáneo" : "2–5 días hábiles";
-  const etaEn = selectedPayout === "Wallet" ? "Instant" : "2–5 business days";
+    selectedPayout === "Wallet"
+      ? "Instantáneo"
+      : selectedPayout === "StoreCredit"
+        ? "En tienda"
+        : "2–5 días hábiles";
+  const etaEn =
+    selectedPayout === "Wallet"
+      ? "Instant"
+      : selectedPayout === "StoreCredit"
+        ? "At store"
+        : "2–5 business days";
+
+  const methodOpt = PAYOUT_OPTIONS.find((p) => p.key === selectedPayout);
+  const methodLabel = methodOpt
+    ? t(methodOpt.titleEs, methodOpt.titleEn)
+    : (selectedPayout ?? "—");
 
   const handleDownloadReceipt = () => {
     toast.success(t("Recibo descargado", "Receipt downloaded"), {
@@ -714,9 +679,7 @@ function ConfirmedStep({
             {t("Método", "Method")}
           </span>
           <span className="font-body text-foreground font-medium">
-            {PAYOUT_OPTIONS.find((p) => p.key === selectedPayout)?.[
-              t("titleEs", "titleEn") as "titleEs"
-            ] ?? selectedPayout}
+            {methodLabel}
           </span>
         </div>
         <div className="h-px bg-border" />
@@ -822,10 +785,14 @@ export default function PrizePage() {
   const needsVerification = prizeAmount > 1000;
 
   const [step, setStep] = useState<Step>("celebrate");
-  const [selectedPayout, setSelectedPayout] = useState<PayoutMethod | null>(
-    null,
-  );
+  const [selectedPayout, setSelectedPayout] =
+    useState<PrizePayoutMethod | null>(null);
   const [showConfetti, setShowConfetti] = useState(false);
+
+  useEffect(() => {
+    const saved = loadPayoutProfile().preferredMethod;
+    setSelectedPayout(saved);
+  }, []);
 
   // Auto-fire confetti on mount for winners
   useEffect(() => {

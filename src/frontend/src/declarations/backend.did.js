@@ -147,6 +147,111 @@ export const UserSettings = IDL.Record({
   'currency' : IDL.Text,
 });
 
+export const Lifecycle = IDL.Variant({
+  'draft' : IDL.Null,
+  'scheduled' : IDL.Null,
+  'live' : IDL.Null,
+  'paused' : IDL.Null,
+  'archived' : IDL.Null,
+});
+export const ProductCategory = IDL.Variant({
+  'classic' : IDL.Null,
+  'no_loss' : IDL.Null,
+  'raffle_nft' : IDL.Null,
+  'progressive' : IDL.Null,
+  'instant_win' : IDL.Null,
+});
+export const TreasuryPercents = IDL.Record({
+  'prizes' : IDL.Nat,
+  'protocol' : IDL.Nat,
+  'stores' : IDL.Nat,
+  'contingency' : IDL.Nat,
+  'gasOrOps' : IDL.Nat,
+});
+export const LotteryIdentity = IDL.Record({
+  'name' : IDL.Text,
+  'slug' : IDL.Text,
+  'shortDescription' : IDL.Text,
+  'iconEmoji' : IDL.Text,
+  'themeColorHex' : IDL.Text,
+  'productCategory' : ProductCategory,
+  'contractSchemaSemantic' : IDL.Text,
+  'schemaVersion' : IDL.Nat,
+  'lifecycle' : Lifecycle,
+});
+export const ScheduleConfig = IDL.Record({
+  'cronExpression' : IDL.Text,
+  'timezoneIana' : IDL.Text,
+  'salesStartAtIso' : IDL.Text,
+  'salesCloseMinutesBeforeDraw' : IDL.Nat,
+  'drawAtIso' : IDL.Text,
+  'claimWindowDays' : IDL.Nat,
+});
+export const TicketConfig = IDL.Record({
+  'pickRule' : IDL.Text,
+  'numberMin' : IDL.Nat,
+  'numberMax' : IDL.Nat,
+  'basePriceMinorUnits' : IDL.Nat,
+  'basePriceCurrency' : IDL.Text,
+  'maxTicketsPerUser' : IDL.Nat,
+});
+export const WinnerAlgorithm = IDL.Variant({
+  'match_N_numbers' : IDL.Null,
+  'random_weighted_by_balance' : IDL.Null,
+  'random_single_winner' : IDL.Null,
+  'top_K_winners' : IDL.Null,
+  'tiered' : IDL.Null,
+});
+export const WinnerSelectionConfig = IDL.Record({
+  'algorithm' : WinnerAlgorithm,
+  'minMatchesForPayout' : IDL.Nat,
+});
+export const TreasuryConfig = IDL.Record({
+  'prizeCurrency' : IDL.Text,
+  'guaranteedSeedAmount' : IDL.Nat,
+  'percents' : TreasuryPercents,
+  'storeCommissionPercent' : IDL.Nat,
+  'protocolCommissionPercent' : IDL.Nat,
+});
+export const RngStrategy = IDL.Variant({
+  'icp_chain_key' : IDL.Null,
+  'raw_rand' : IDL.Null,
+  'commit_reveal' : IDL.Null,
+  'drand_compatible' : IDL.Null,
+});
+export const RngConfig = IDL.Record({
+  'primary' : RngStrategy,
+  'fallback' : RngStrategy,
+  'randomWords' : IDL.Nat,
+});
+export const ComplianceConfig = IDL.Record({
+  'allowedCountryCodes' : IDL.Vec(IDL.Text),
+  'minimumAge' : IDL.Nat,
+  'termsUrl' : IDL.Text,
+});
+export const LotteryProductConfig = IDL.Record({
+  'identity' : LotteryIdentity,
+  'schedule' : ScheduleConfig,
+  'ticket' : TicketConfig,
+  'winnerSelection' : WinnerSelectionConfig,
+  'treasury' : TreasuryConfig,
+  'rng' : RngConfig,
+  'compliance' : ComplianceConfig,
+});
+export const DraftEntry = IDL.Record({
+  'slug' : IDL.Text,
+  'config' : LotteryProductConfig,
+  'updatedAt' : Timestamp,
+});
+export const AdminUpsertDraftResult = IDL.Variant({
+  'ok' : IDL.Null,
+  'err' : IDL.Text,
+});
+export const AdminPublishLotteryResult = IDL.Variant({
+  'ok' : Lottery,
+  'err' : IDL.Text,
+});
+
 export const idlService = IDL.Service({
   'claimPrize' : IDL.Func([TicketId, PayoutMethod], [IDL.Opt(PrizeClaim)], []),
   'createUser' : IDL.Func(
@@ -187,6 +292,19 @@ export const idlService = IDL.Service({
         IDL.Opt(IDL.Text),
       ],
       [IDL.Bool],
+      [],
+    ),
+  'adminBootstrap' : IDL.Func([], [], []),
+  'adminIsCallerAuthorized' : IDL.Func([UserId], [IDL.Bool], ['query']),
+  'adminListDraftEntries' : IDL.Func([], [IDL.Vec(DraftEntry)], ['query']),
+  'adminUpsertDraft' : IDL.Func(
+      [LotteryProductConfig],
+      [AdminUpsertDraftResult],
+      [],
+    ),
+  'adminPublishLottery' : IDL.Func(
+      [IDL.Text],
+      [AdminPublishLotteryResult],
       [],
     ),
 });
@@ -332,7 +450,111 @@ export const idlFactory = ({ IDL }) => {
     'language' : IDL.Text,
     'currency' : IDL.Text,
   });
-  
+  const Lifecycle = IDL.Variant({
+    'draft' : IDL.Null,
+    'scheduled' : IDL.Null,
+    'live' : IDL.Null,
+    'paused' : IDL.Null,
+    'archived' : IDL.Null,
+  });
+  const ProductCategory = IDL.Variant({
+    'classic' : IDL.Null,
+    'no_loss' : IDL.Null,
+    'raffle_nft' : IDL.Null,
+    'progressive' : IDL.Null,
+    'instant_win' : IDL.Null,
+  });
+  const TreasuryPercents = IDL.Record({
+    'prizes' : IDL.Nat,
+    'protocol' : IDL.Nat,
+    'stores' : IDL.Nat,
+    'contingency' : IDL.Nat,
+    'gasOrOps' : IDL.Nat,
+  });
+  const LotteryIdentity = IDL.Record({
+    'name' : IDL.Text,
+    'slug' : IDL.Text,
+    'shortDescription' : IDL.Text,
+    'iconEmoji' : IDL.Text,
+    'themeColorHex' : IDL.Text,
+    'productCategory' : ProductCategory,
+    'contractSchemaSemantic' : IDL.Text,
+    'schemaVersion' : IDL.Nat,
+    'lifecycle' : Lifecycle,
+  });
+  const ScheduleConfig = IDL.Record({
+    'cronExpression' : IDL.Text,
+    'timezoneIana' : IDL.Text,
+    'salesStartAtIso' : IDL.Text,
+    'salesCloseMinutesBeforeDraw' : IDL.Nat,
+    'drawAtIso' : IDL.Text,
+    'claimWindowDays' : IDL.Nat,
+  });
+  const TicketConfig = IDL.Record({
+    'pickRule' : IDL.Text,
+    'numberMin' : IDL.Nat,
+    'numberMax' : IDL.Nat,
+    'basePriceMinorUnits' : IDL.Nat,
+    'basePriceCurrency' : IDL.Text,
+    'maxTicketsPerUser' : IDL.Nat,
+  });
+  const WinnerAlgorithm = IDL.Variant({
+    'match_N_numbers' : IDL.Null,
+    'random_weighted_by_balance' : IDL.Null,
+    'random_single_winner' : IDL.Null,
+    'top_K_winners' : IDL.Null,
+    'tiered' : IDL.Null,
+  });
+  const WinnerSelectionConfig = IDL.Record({
+    'algorithm' : WinnerAlgorithm,
+    'minMatchesForPayout' : IDL.Nat,
+  });
+  const TreasuryConfig = IDL.Record({
+    'prizeCurrency' : IDL.Text,
+    'guaranteedSeedAmount' : IDL.Nat,
+    'percents' : TreasuryPercents,
+    'storeCommissionPercent' : IDL.Nat,
+    'protocolCommissionPercent' : IDL.Nat,
+  });
+  const RngStrategy = IDL.Variant({
+    'icp_chain_key' : IDL.Null,
+    'raw_rand' : IDL.Null,
+    'commit_reveal' : IDL.Null,
+    'drand_compatible' : IDL.Null,
+  });
+  const RngConfig = IDL.Record({
+    'primary' : RngStrategy,
+    'fallback' : RngStrategy,
+    'randomWords' : IDL.Nat,
+  });
+  const ComplianceConfig = IDL.Record({
+    'allowedCountryCodes' : IDL.Vec(IDL.Text),
+    'minimumAge' : IDL.Nat,
+    'termsUrl' : IDL.Text,
+  });
+  const LotteryProductConfig = IDL.Record({
+    'identity' : LotteryIdentity,
+    'schedule' : ScheduleConfig,
+    'ticket' : TicketConfig,
+    'winnerSelection' : WinnerSelectionConfig,
+    'treasury' : TreasuryConfig,
+    'rng' : RngConfig,
+    'compliance' : ComplianceConfig,
+  });
+  const DraftEntry = IDL.Record({
+    'slug' : IDL.Text,
+    'config' : LotteryProductConfig,
+    'updatedAt' : Timestamp,
+  });
+  const AdminUpsertDraftResult = IDL.Variant({
+    'ok' : IDL.Null,
+    'err' : IDL.Text,
+  });
+  const AdminPublishLotteryResult = IDL.Variant({
+    'ok' : Lottery,
+    'err' : IDL.Text,
+  });
+
   return IDL.Service({
     'claimPrize' : IDL.Func(
         [TicketId, PayoutMethod],
@@ -377,6 +599,19 @@ export const idlFactory = ({ IDL }) => {
           IDL.Opt(IDL.Text),
         ],
         [IDL.Bool],
+        [],
+      ),
+    'adminBootstrap' : IDL.Func([], [], []),
+    'adminIsCallerAuthorized' : IDL.Func([UserId], [IDL.Bool], ['query']),
+    'adminListDraftEntries' : IDL.Func([], [IDL.Vec(DraftEntry)], ['query']),
+    'adminUpsertDraft' : IDL.Func(
+        [LotteryProductConfig],
+        [AdminUpsertDraftResult],
+        [],
+      ),
+    'adminPublishLottery' : IDL.Func(
+        [IDL.Text],
+        [AdminPublishLotteryResult],
         [],
       ),
   });

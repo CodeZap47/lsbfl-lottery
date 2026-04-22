@@ -136,6 +136,96 @@ export interface Winner {
   'userId' : UserId,
   'wonAt' : Timestamp,
 }
+export type Lifecycle = { 'draft' : null } |
+  { 'scheduled' : null } |
+  { 'live' : null } |
+  { 'paused' : null } |
+  { 'archived' : null };
+export type ProductCategory = { 'classic' : null } |
+  { 'no_loss' : null } |
+  { 'raffle_nft' : null } |
+  { 'progressive' : null } |
+  { 'instant_win' : null };
+export interface TreasuryPercents {
+  'prizes' : bigint,
+  'protocol' : bigint,
+  'stores' : bigint,
+  'contingency' : bigint,
+  'gasOrOps' : bigint,
+}
+export interface LotteryIdentity {
+  'name' : string,
+  'slug' : string,
+  'shortDescription' : string,
+  'iconEmoji' : string,
+  'themeColorHex' : string,
+  'productCategory' : ProductCategory,
+  'contractSchemaSemantic' : string,
+  'schemaVersion' : bigint,
+  'lifecycle' : Lifecycle,
+}
+export interface ScheduleConfig {
+  'cronExpression' : string,
+  'timezoneIana' : string,
+  'salesStartAtIso' : string,
+  'salesCloseMinutesBeforeDraw' : bigint,
+  'drawAtIso' : string,
+  'claimWindowDays' : bigint,
+}
+export interface TicketConfig {
+  'pickRule' : string,
+  'numberMin' : bigint,
+  'numberMax' : bigint,
+  'basePriceMinorUnits' : bigint,
+  'basePriceCurrency' : string,
+  'maxTicketsPerUser' : bigint,
+}
+export type WinnerAlgorithm = { 'match_N_numbers' : null } |
+  { 'random_weighted_by_balance' : null } |
+  { 'random_single_winner' : null } |
+  { 'top_K_winners' : null } |
+  { 'tiered' : null };
+export interface WinnerSelectionConfig {
+  'algorithm' : WinnerAlgorithm,
+  'minMatchesForPayout' : bigint,
+}
+export interface TreasuryConfig {
+  'prizeCurrency' : string,
+  'guaranteedSeedAmount' : bigint,
+  'percents' : TreasuryPercents,
+  'storeCommissionPercent' : bigint,
+  'protocolCommissionPercent' : bigint,
+}
+export type RngStrategy = { 'icp_chain_key' : null } |
+  { 'raw_rand' : null } |
+  { 'commit_reveal' : null } |
+  { 'drand_compatible' : null };
+export interface RngConfig {
+  'primary' : RngStrategy,
+  'fallback' : RngStrategy,
+  'randomWords' : bigint,
+}
+export interface ComplianceConfig {
+  'allowedCountryCodes' : Array<string>,
+  'minimumAge' : bigint,
+  'termsUrl' : string,
+}
+export interface LotteryProductConfig {
+  'identity' : LotteryIdentity,
+  'schedule' : ScheduleConfig,
+  'ticket' : TicketConfig,
+  'winnerSelection' : WinnerSelectionConfig,
+  'treasury' : TreasuryConfig,
+  'rng' : RngConfig,
+  'compliance' : ComplianceConfig,
+}
+export interface DraftEntry {
+  'slug' : string,
+  'config' : LotteryProductConfig,
+  'updatedAt' : Timestamp,
+}
+export type AdminUpsertDraftResult = { 'ok' : null } | { 'err' : string };
+export type AdminPublishLotteryResult = { 'ok' : Lottery } | { 'err' : string };
 export interface _SERVICE {
   'claimPrize' : ActorMethod<[TicketId, PayoutMethod], [] | [PrizeClaim]>,
   'createUser' : ActorMethod<
@@ -166,6 +256,14 @@ export interface _SERVICE {
     [[] | [string], [] | [string], [] | [string], [] | [string]],
     boolean
   >,
+  'adminBootstrap' : ActorMethod<[], void>,
+  'adminIsCallerAuthorized' : ActorMethod<[UserId], boolean>,
+  'adminListDraftEntries' : ActorMethod<[], Array<DraftEntry>>,
+  'adminUpsertDraft' : ActorMethod<
+    [LotteryProductConfig],
+    AdminUpsertDraftResult
+  >,
+  'adminPublishLottery' : ActorMethod<[string], AdminPublishLotteryResult>,
 }
 export declare const idlService: IDL.ServiceClass;
 export declare const idlInitArgs: IDL.Type[];

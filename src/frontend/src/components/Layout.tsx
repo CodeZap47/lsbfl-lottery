@@ -6,6 +6,7 @@ import {
   Globe,
   HelpCircle,
   Home,
+  LayoutDashboard,
   MapPin,
   Moon,
   Settings,
@@ -30,7 +31,8 @@ type StaticPath =
   | "/profile"
   | "/community"
   | "/pos"
-  | "/help";
+  | "/help"
+  | "/admin";
 
 interface NavItem {
   staticPath: StaticPath | null;
@@ -122,6 +124,15 @@ const NAV_ITEMS: NavItem[] = [
     labelEs: "Ayuda",
     labelEn: "Help",
     Icon: HelpCircle,
+    showInBottom: false,
+  },
+  {
+    staticPath: "/admin",
+    navigateTo: "/admin",
+    activePrefix: "/admin",
+    labelEs: "Admin",
+    labelEn: "Admin",
+    Icon: LayoutDashboard,
     showInBottom: false,
   },
 ];

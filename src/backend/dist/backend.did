@@ -153,6 +153,126 @@ type Badge =
    id: text;
    name: text;
  };
+type Lifecycle = 
+ variant {
+   draft;
+   scheduled;
+   live;
+   paused;
+   archived;
+ };
+type ProductCategory = 
+ variant {
+   classic;
+   no_loss;
+   raffle_nft;
+   progressive;
+   instant_win;
+ };
+type TreasuryPercents = 
+ record {
+   prizes: nat;
+   protocol: nat;
+   stores: nat;
+   contingency: nat;
+   gasOrOps: nat;
+ };
+type LotteryIdentity = 
+ record {
+   name: text;
+   slug: text;
+   shortDescription: text;
+   iconEmoji: text;
+   themeColorHex: text;
+   productCategory: ProductCategory;
+   contractSchemaSemantic: text;
+   schemaVersion: nat;
+   lifecycle: Lifecycle;
+ };
+type ScheduleConfig = 
+ record {
+   cronExpression: text;
+   timezoneIana: text;
+   salesStartAtIso: text;
+   salesCloseMinutesBeforeDraw: nat;
+   drawAtIso: text;
+   claimWindowDays: nat;
+ };
+type TicketConfig = 
+ record {
+   pickRule: text;
+   numberMin: nat;
+   numberMax: nat;
+   basePriceMinorUnits: nat;
+   basePriceCurrency: text;
+   maxTicketsPerUser: nat;
+ };
+type WinnerAlgorithm = 
+ variant {
+   match_N_numbers;
+   random_weighted_by_balance;
+   random_single_winner;
+   top_K_winners;
+   tiered;
+ };
+type WinnerSelectionConfig = 
+ record {
+   algorithm: WinnerAlgorithm;
+   minMatchesForPayout: nat;
+ };
+type TreasuryConfig = 
+ record {
+   prizeCurrency: text;
+   guaranteedSeedAmount: nat;
+   percents: TreasuryPercents;
+   storeCommissionPercent: nat;
+   protocolCommissionPercent: nat;
+ };
+type RngStrategy = 
+ variant {
+   icp_chain_key;
+   raw_rand;
+   commit_reveal;
+   drand_compatible;
+ };
+type RngConfig = 
+ record {
+   primary: RngStrategy;
+   fallback: RngStrategy;
+   randomWords: nat;
+ };
+type ComplianceConfig = 
+ record {
+   allowedCountryCodes: vec text;
+   minimumAge: nat;
+   termsUrl: text;
+ };
+type LotteryProductConfig = 
+ record {
+   identity: LotteryIdentity;
+   schedule: ScheduleConfig;
+   ticket: TicketConfig;
+   winnerSelection: WinnerSelectionConfig;
+   treasury: TreasuryConfig;
+   rng: RngConfig;
+   compliance: ComplianceConfig;
+ };
+type DraftEntry = 
+ record {
+   slug: text;
+   config: LotteryProductConfig;
+   updatedAt: Timestamp;
+ };
+type AdminUpsertDraftResult = 
+ variant {
+   ok;
+   err: text;
+ };
+type AdminPublishLotteryResult = 
+ variant {
+   ok: Lottery;
+   err: text;
+ };
 service : {
   claimPrize: (ticketId: TicketId, method: PayoutMethod) -> (opt PrizeClaim);
   createUser: (name: text, email: opt text, country: text, currency: 
@@ -178,4 +298,9 @@ service : {
   updateSettings: (settings: UserSettings) -> (bool);
   updateUserProfile: (name: opt text, email: opt text, country: opt text,
    currency: opt text) -> (bool);
+  adminBootstrap: () -> ();
+  adminIsCallerAuthorized: (caller: UserId) -> (bool) query;
+  adminListDraftEntries: () -> (vec DraftEntry) query;
+  adminUpsertDraft: (LotteryProductConfig) -> (AdminUpsertDraftResult);
+  adminPublishLottery: (text) -> (AdminPublishLotteryResult);
 }

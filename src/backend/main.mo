@@ -2,6 +2,7 @@ import List "mo:core/List";
 import Principal "mo:core/Principal";
 import UserTypes "types/users";
 import LotteryTypes "types/lotteries";
+import LotteryConfig "types/lottery-config";
 import TicketTypes "types/tickets";
 import StoreTypes "types/stores";
 import CommunityTypes "types/community";
@@ -10,8 +11,27 @@ import LotteriesApi "mixins/lotteries-api";
 import TicketsApi "mixins/tickets-api";
 import StoresApi "mixins/stores-api";
 import CommunityApi "mixins/community-api";
+import AdminLotteryApi "mixins/admin-lottery-api";
+import Acl "lib/admin-acl";
+import DraftBuf "lib/lottery-draft-buffer";
 
 actor {
+  stable var stableAdminPrincipals : [Principal] = [];
+  stable var stableDraftEntries : [LotteryConfig.DraftEntry] = [];
+
+  var adminBuf = Acl.newAdminBuffer(stableAdminPrincipals);
+  var draftBuf = DraftBuf.fromArray(stableDraftEntries);
+
+  system func preupgrade() {
+    stableAdminPrincipals := Acl.toArray(adminBuf);
+    stableDraftEntries := DraftBuf.toArray(draftBuf);
+  };
+
+  system func postupgrade() {
+    adminBuf := Acl.newAdminBuffer(stableAdminPrincipals);
+    draftBuf := DraftBuf.fromArray(stableDraftEntries);
+  };
+
   // ── User state ──────────────────────────────────────────────────────────────
   let users = List.empty<UserTypes.User>();
 
@@ -238,4 +258,5 @@ actor {
   include TicketsApi(tickets, claims);
   include StoresApi(stores, sales);
   include CommunityApi(winners, badges);
+  include AdminLotteryApi(adminBuf, draftBuf, lotteries, draws);
 };

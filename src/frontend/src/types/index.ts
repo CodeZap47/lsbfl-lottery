@@ -9,7 +9,31 @@ export type TicketStatus =
   | "Lost";
 export type DrawStatus = "Upcoming" | "InProgress" | "Completed";
 export type PayoutMethod = "Wallet" | "BankTransfer" | "StoreCredit" | "Crypto";
+/** Métodos mostrados en premios y perfil de cobro */
+export type PrizePayoutMethod = Extract<
+  PayoutMethod,
+  "Wallet" | "BankTransfer" | "StoreCredit"
+>;
 export type Language = "es" | "en";
+
+export interface PayoutBankDetails {
+  accountHolder: string;
+  bankName: string;
+  clabeOrIban: string;
+  /** RFC u otro identificador fiscal (opcional) */
+  taxId?: string;
+}
+
+export interface PayoutProfile {
+  preferredMethod: PrizePayoutMethod;
+  /** Nombre completo para verificación / liquidación (todos los métodos) */
+  contactFullName: string;
+  /** Teléfono de contacto para seguimiento del cobro */
+  contactPhone: string;
+  bank: PayoutBankDetails;
+  /** Ciudad o sucursal preferida para cobro en tienda */
+  preferredCity: string;
+}
 
 // ─── Core Entities ─────────────────────────────────────────────────────────────
 

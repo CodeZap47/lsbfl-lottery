@@ -7,14 +7,9 @@ import { useNavigate } from "@tanstack/react-router";
 interface LotteryCardProps {
   lottery: Lottery;
   className?: string;
-  variant?: "stack" | "flat";
 }
 
-export function LotteryCard({
-  lottery,
-  className,
-  variant = "flat",
-}: LotteryCardProps) {
+export function LotteryCard({ lottery, className }: LotteryCardProps) {
   const navigate = useNavigate();
   const { t } = useLanguage();
 
@@ -26,18 +21,10 @@ export function LotteryCard({
     <button
       type="button"
       className={cn(
-        "ticket-card relative overflow-hidden cursor-pointer group transition-smooth w-full text-left",
+        "ticket-card relative overflow-hidden cursor-pointer group w-full text-left",
+        "transition-[transform,box-shadow,border-color] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]",
         "border border-border/60 hover:border-primary/40",
         "hover:shadow-glow-gold hover:-translate-y-1",
-        variant === "stack" &&
-          [
-            "before:absolute before:inset-0 before:rounded-[1.5rem]",
-            "before:bg-card before:border before:border-border/40",
-            "before:translate-x-1.5 before:translate-y-2 before:-z-10",
-            "after:absolute after:inset-0 after:rounded-[1.5rem]",
-            "after:bg-card after:border after:border-border/20",
-            "after:translate-x-3 after:translate-y-4 after:-z-20",
-          ].join(" "),
         className,
       )}
       style={{
@@ -51,13 +38,13 @@ export function LotteryCard({
     >
       {/* Decorative filigree overlay */}
       <div
-        className="absolute inset-0 opacity-[0.06] pointer-events-none"
+        className="absolute inset-0 z-0 opacity-[0.06] pointer-events-none"
         style={{
           backgroundImage: `radial-gradient(circle at 20% 50%, ${lottery.accentColor}55 0%, transparent 60%), radial-gradient(circle at 80% 20%, ${lottery.accentColor}33 0%, transparent 50%)`,
         }}
       />
 
-      <div className="relative p-5">
+      <div className="relative z-10 p-5">
         {/* Header */}
         <div className="flex items-start justify-between mb-4">
           <div>
@@ -122,20 +109,10 @@ export function LotteryCard({
           </div>
         </div>
 
-        {/* Tags + CTA */}
-        <div className="flex items-center justify-between gap-2">
-          <div className="flex gap-1 flex-wrap">
-            {lottery.tags.slice(0, 2).map((tag) => (
-              <span
-                key={tag}
-                className="text-xs px-2 py-0.5 rounded-full border border-white/20 text-white/60 font-body"
-              >
-                {tag}
-              </span>
-            ))}
-          </div>
+        {/* CTA */}
+        <div className="flex w-full justify-center">
           <span
-            className="shrink-0 px-4 py-2 rounded-xl font-body font-semibold text-sm transition-smooth hover:brightness-110 active:scale-95"
+            className="inline-flex px-4 py-2 rounded-xl font-body font-semibold text-sm transition-smooth hover:brightness-110 active:scale-95"
             style={{ background: lottery.accentColor, color: "#0d0d0d" }}
             aria-hidden="true"
           >
