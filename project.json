@@ -1,0 +1,32 @@
+{
+  "overview": "LSBFL (Life Should Be Free Lottery) is a web3 phygital lottery app where anyone can buy digital lottery tickets, watch animated live draws, and manage their collectible ticket wallet — with store maps and POS portals for physical sales. Elegant, aspirational, and international.",
+  "features": [
+    "Animated live draw with spinning ball reveal and confetti celebrations",
+    "Collectible ticket wallet with flip-card gallery and gift-by-link",
+    "Narrative onboarding with country & currency selector",
+    "Home feed with Mega Jackpot hero and lottery card carousel",
+    "Digital ticket purchase with tarot-card preview and seal animation",
+    "Prize claim flow with payout options",
+    "Physical store map with golden pins and search",
+    "POS portal for cashiers with commissions dashboard",
+    "Community winner feed with collectible badges",
+    "Profile with responsible gaming settings",
+    "Visual help center with FAQ accordion",
+    "Spanish primary language with English toggle",
+    "Dark and light mode",
+    "Gold glow + clover green + deep black aesthetic"
+  ],
+  "category": "entertainment",
+  "tags": [
+    "lottery",
+    "web3",
+    "phygital",
+    "collectibles",
+    "gamification",
+    "fintech",
+    "spanish",
+    "dark-mode",
+    "animations"
+  ],
+  "last_updated": "2026-04-22T07:21:34.843Z"
+}

@@ -1,0 +1,181 @@
+type Winner = 
+ record {
+   consentToShare: bool;
+   country: text;
+   displayName: text;
+   id: text;
+   lotteryName: text;
+   prizeAmount: nat;
+   userId: UserId;
+   wonAt: Timestamp;
+ };
+type UserStats = 
+ record {
+   badges: vec text;
+   totalSpent: nat;
+   totalTickets: nat;
+   totalWins: nat;
+   totalWon: nat;
+ };
+type UserSettings = 
+ record {
+   country: text;
+   currency: text;
+   language: text;
+   notificationsEnabled: bool;
+ };
+type UserPublic = 
+ record {
+   country: text;
+   currency: text;
+   email: opt text;
+   id: UserId;
+   isGuest: bool;
+   joinedAt: Timestamp;
+   name: text;
+ };
+type UserId = principal;
+type Timestamp = int;
+type TicketStatus = 
+ variant {
+   Active;
+   InDraw;
+   Lost;
+   Unclaimed;
+   Winner;
+ };
+type TicketId = text;
+type Ticket = 
+ record {
+   artSeed: nat;
+   giftedTo: opt text;
+   id: TicketId;
+   isGifted: bool;
+   lotteryId: LotteryId;
+   numbers: vec nat;
+   ownerId: UserId;
+   purchasedAt: Timestamp;
+   status: TicketStatus;
+ };
+type StoreId = text;
+type Store = 
+ record {
+   address: text;
+   city: text;
+   country: text;
+   hasTickets: bool;
+   hoursOpen: text;
+   id: StoreId;
+   lat: float64;
+   lng: float64;
+   name: text;
+   phone: opt text;
+ };
+type PrizeClaim = 
+ record {
+   amountClaimed: nat;
+   claimedAt: Timestamp;
+   id: text;
+   method: PayoutMethod;
+   status: ClaimStatus;
+   ticketId: TicketId;
+   userId: UserId;
+ };
+type PayoutMethod = 
+ variant {
+   BankTransfer;
+   Crypto;
+   StoreCredit;
+   Wallet;
+ };
+type POSSale = 
+ record {
+   commission: nat;
+   id: text;
+   soldAt: Timestamp;
+   storeId: StoreId;
+   ticketIds: vec TicketId;
+   totalAmount: nat;
+ };
+type LotteryType = 
+ variant {
+   Classic645;
+   Daily;
+   NFTRaffle;
+   NoLoss;
+ };
+type LotteryId = text;
+type Lottery = 
+ record {
+   drawDate: Timestamp;
+   id: LotteryId;
+   isActive: bool;
+   lotteryType: LotteryType;
+   name: text;
+   participatingCountries: vec text;
+   prizePool: nat;
+   ticketPrice: nat;
+ };
+type DrawStatus = 
+ variant {
+   Completed;
+   InProgress;
+   Upcoming;
+ };
+type DrawId = text;
+type Draw = 
+ record {
+   drawnAt: opt Timestamp;
+   drawnNumbers: vec nat;
+   fairnessSeal: text;
+   id: DrawId;
+   lotteryId: LotteryId;
+   status: DrawStatus;
+ };
+type ClaimStatus = 
+ variant {
+   Completed;
+   Pending;
+   Processing;
+ };
+type BadgeType = 
+ variant {
+   Gifter;
+   MegaWinner;
+   Participant;
+   Winner;
+ };
+type Badge = 
+ record {
+   badgeType: BadgeType;
+   description: text;
+   earnedAt: Timestamp;
+   id: text;
+   name: text;
+ };
+service : {
+  claimPrize: (ticketId: TicketId, method: PayoutMethod) -> (opt PrizeClaim);
+  createUser: (name: text, email: opt text, country: text, currency: 
+   text, isGuest: bool) -> (UserPublic);
+  getDrawByLottery: (lotteryId: LotteryId) -> (vec Draw) query;
+  getLatestDraw: (lotteryId: LotteryId) -> (opt Draw) query;
+  getLotteries: () -> (vec Lottery) query;
+  getLotteryById: (id: LotteryId) -> (opt Lottery) query;
+  getMyBadges: () -> (vec Badge) query;
+  getMyTickets: () -> (vec Ticket) query;
+  getStoreSales: (storeId: StoreId) -> (vec POSSale) query;
+  getStores: () -> (vec Store) query;
+  getStoresByCountry: (country: text) -> (vec Store) query;
+  getTicketById: (id: TicketId) -> (opt Ticket) query;
+  getUser: (id: UserId) -> (opt UserPublic) query;
+  getUserStats: () -> (opt UserStats) query;
+  getWinners: () -> (vec Winner) query;
+  giftTicket: (ticketId: TicketId, recipientIdentifier: text) -> (bool);
+  purchaseTicket: (lotteryId: LotteryId, numbers: vec nat, artSeed: nat) ->
+   (Ticket);
+  recordSale: (storeId: StoreId, ticketIds: vec TicketId, totalAmount: 
+   nat, commission: nat) -> (POSSale);
+  updateSettings: (settings: UserSettings) -> (bool);
+  updateUserProfile: (name: opt text, email: opt text, country: opt text,
+   currency: opt text) -> (bool);
+}

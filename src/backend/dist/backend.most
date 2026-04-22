@@ -1,0 +1,165 @@
+// Version: 1.0.0
+type BadgeType__1062938553 = {#Gifter; #MegaWinner; #Participant; #Winner};
+type Badge__656298076 =
+  {
+    badgeType : BadgeType__1062938553;
+    description : Text;
+    earnedAt : Timestamp__301639476;
+    id : Text;
+    name : Text
+  };
+type ClaimStatus__78457107 = {#Completed; #Pending; #Processing};
+type DrawId__250784238 = Text;
+type DrawStatus__529963710 = {#Completed; #InProgress; #Upcoming};
+type Draw__551199281 =
+  {
+    drawnAt : ?Timestamp__301639476;
+    drawnNumbers : [Nat];
+    fairnessSeal : Text;
+    id : DrawId__250784238;
+    lotteryId : LotteryId__970463628;
+    status : DrawStatus__529963710
+  };
+type LotteryId__970463628 = Text;
+type LotteryType__192764837 = {#Classic645; #Daily; #NFTRaffle; #NoLoss};
+type Lottery__877213973 =
+  {
+    drawDate : Timestamp__301639476;
+    id : LotteryId__970463628;
+    isActive : Bool;
+    lotteryType : LotteryType__192764837;
+    name : Text;
+    participatingCountries : [Text];
+    prizePool : Nat;
+    ticketPrice : Nat
+  };
+type Nat__490723111 = Nat__920180692;
+type Nat__920180692 = Nat;
+type POSSale__1019279590 =
+  {
+    commission : Nat;
+    id : Text;
+    soldAt : Timestamp__301639476;
+    storeId : StoreId__546157348;
+    ticketIds : [TicketId__224230191];
+    totalAmount : Nat
+  };
+type PayoutMethod__963805293 =
+  {#BankTransfer; #Crypto; #StoreCredit; #Wallet};
+type PrizeClaim__29625768 =
+  {
+    amountClaimed : Nat;
+    claimedAt : Timestamp__301639476;
+    id : Text;
+    method : PayoutMethod__963805293;
+    status : ClaimStatus__78457107;
+    ticketId : TicketId__224230191;
+    userId : UserId__158757552
+  };
+type StoreId__546157348 = Text;
+type Store__1057092734 =
+  {
+    address : Text;
+    city : Text;
+    country : Text;
+    hasTickets : Bool;
+    hoursOpen : Text;
+    id : StoreId__546157348;
+    lat : Float;
+    lng : Float;
+    name : Text;
+    phone : ?Text
+  };
+type TicketId__224230191 = Text;
+type TicketStatus__903820774 = {#Active; #InDraw; #Lost; #Unclaimed; #Winner};
+type Ticket__555771949 =
+  {
+    artSeed : Nat;
+    giftedTo : ?Text;
+    id : TicketId__224230191;
+    isGifted : Bool;
+    lotteryId : LotteryId__970463628;
+    numbers : [Nat];
+    ownerId : UserId__158757552;
+    purchasedAt : Timestamp__301639476;
+    status : TicketStatus__903820774
+  };
+type Timestamp__301639476 = Int;
+type UserId__158757552 = Principal;
+type User__98118558 =
+  {
+    var country : Text;
+    var currency : Text;
+    var email : ?Text;
+    id : UserId__158757552;
+    isGuest : Bool;
+    joinedAt : Timestamp__301639476;
+    var name : Text
+  };
+type Winner__161587227 =
+  {
+    consentToShare : Bool;
+    country : Text;
+    displayName : Text;
+    id : Text;
+    lotteryName : Text;
+    prizeAmount : Nat;
+    userId : UserId__158757552;
+    wonAt : Timestamp__301639476
+  };
+actor {
+  stable badges :
+    {
+      var blockIndex : Nat__490723111;
+      var blocks : [var [var ?Badge__656298076]];
+      var elementIndex : Nat__490723111
+    };
+  stable claims :
+    {
+      var blockIndex : Nat__490723111;
+      var blocks : [var [var ?PrizeClaim__29625768]];
+      var elementIndex : Nat__490723111
+    };
+  stable draws :
+    {
+      var blockIndex : Nat__490723111;
+      var blocks : [var [var ?Draw__551199281]];
+      var elementIndex : Nat__490723111
+    };
+  stable lotteries :
+    {
+      var blockIndex : Nat__490723111;
+      var blocks : [var [var ?Lottery__877213973]];
+      var elementIndex : Nat__490723111
+    };
+  stable sales :
+    {
+      var blockIndex : Nat__490723111;
+      var blocks : [var [var ?POSSale__1019279590]];
+      var elementIndex : Nat__490723111
+    };
+  stable stores :
+    {
+      var blockIndex : Nat__490723111;
+      var blocks : [var [var ?Store__1057092734]];
+      var elementIndex : Nat__490723111
+    };
+  stable tickets :
+    {
+      var blockIndex : Nat__490723111;
+      var blocks : [var [var ?Ticket__555771949]];
+      var elementIndex : Nat__490723111
+    };
+  stable users :
+    {
+      var blockIndex : Nat__490723111;
+      var blocks : [var [var ?User__98118558]];
+      var elementIndex : Nat__490723111
+    };
+  stable winners :
+    {
+      var blockIndex : Nat__490723111;
+      var blocks : [var [var ?Winner__161587227]];
+      var elementIndex : Nat__490723111
+    }
+};

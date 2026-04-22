@@ -1,0 +1,168 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --font-display: "Fraunces";
+    --font-body: "Space Grotesk";
+    --font-mono: "JetBrains Mono";
+    --radius: 0.75rem;
+
+    --background: 0.97 0.01 70;
+    --foreground: 0.1 0.01 50;
+    --card: 0.99 0.01 70;
+    --card-foreground: 0.1 0.01 50;
+    --popover: 0.99 0.01 70;
+    --popover-foreground: 0.1 0.01 50;
+
+    --primary: 0.65 0.16 80;
+    --primary-foreground: 0.1 0.01 50;
+
+    --secondary: 0.38 0.08 160;
+    --secondary-foreground: 0.95 0.01 70;
+    --muted: 0.92 0.02 70;
+    --muted-foreground: 0.48 0.02 70;
+
+    --accent: 0.65 0.16 80;
+    --accent-foreground: 0.1 0.01 50;
+
+    --destructive: 0.58 0.2 25;
+    --destructive-foreground: 0.98 0.01 70;
+
+    --border: 0.88 0.02 70;
+    --input: 0.92 0.02 70;
+    --ring: 0.65 0.16 80;
+
+    --chart-1: 0.65 0.16 80;
+    --chart-2: 0.38 0.08 160;
+    --chart-3: 0.55 0.12 240;
+    --chart-4: 0.72 0.14 40;
+    --chart-5: 0.48 0.1 185;
+
+    --sidebar: 0.98 0.01 70;
+    --sidebar-foreground: 0.1 0.01 50;
+    --sidebar-primary: 0.65 0.16 80;
+    --sidebar-primary-foreground: 0.98 0.01 70;
+    --sidebar-accent: 0.92 0.02 70;
+    --sidebar-accent-foreground: 0.38 0.08 160;
+    --sidebar-border: 0.88 0.02 70;
+    --sidebar-ring: 0.65 0.16 80;
+  }
+
+  .dark {
+    --background: 0.08 0.01 50;
+    --foreground: 0.95 0.01 70;
+    --card: 0.12 0.01 50;
+    --card-foreground: 0.95 0.01 70;
+    --popover: 0.15 0.01 50;
+    --popover-foreground: 0.95 0.01 70;
+
+    --primary: 0.72 0.18 80;
+    --primary-foreground: 0.08 0.01 50;
+
+    --secondary: 0.55 0.12 160;
+    --secondary-foreground: 0.92 0.02 70;
+    --muted: 0.18 0.01 50;
+    --muted-foreground: 0.62 0.02 70;
+
+    --accent: 0.72 0.18 80;
+    --accent-foreground: 0.08 0.01 50;
+
+    --destructive: 0.65 0.2 25;
+    --destructive-foreground: 0.08 0.01 50;
+
+    --border: 0.22 0.01 50;
+    --input: 0.22 0.01 50;
+    --ring: 0.72 0.18 80;
+
+    --chart-1: 0.72 0.18 80;
+    --chart-2: 0.55 0.12 160;
+    --chart-3: 0.65 0.14 240;
+    --chart-4: 0.82 0.16 40;
+    --chart-5: 0.58 0.12 185;
+
+    --sidebar: 0.12 0.01 50;
+    --sidebar-foreground: 0.95 0.01 70;
+    --sidebar-primary: 0.72 0.18 80;
+    --sidebar-primary-foreground: 0.08 0.01 50;
+    --sidebar-accent: 0.18 0.01 50;
+    --sidebar-accent-foreground: 0.92 0.02 70;
+    --sidebar-border: 0.22 0.01 50;
+    --sidebar-ring: 0.72 0.18 80;
+  }
+
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground font-body antialiased;
+  }
+}
+
+@font-face {
+  font-family: "Fraunces";
+  src: url("/assets/fonts/Fraunces.woff2") format("woff2");
+  font-weight: 400 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Space Grotesk";
+  src: url("/assets/fonts/SpaceGrotesk.woff2") format("woff2");
+  font-weight: 400 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "JetBrains Mono";
+  src: url("/assets/fonts/JetBrainsMono.woff2") format("woff2");
+  font-weight: 400 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@layer utilities {
+  .transition-smooth {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .glow-gold {
+    box-shadow: 0 0 20px oklch(var(--primary) / 0.4), 0 0 40px
+      oklch(var(--primary) / 0.2);
+  }
+
+  .glow-gold-active {
+    box-shadow: 0 0 30px oklch(var(--primary) / 0.6), 0 0 60px
+      oklch(var(--primary) / 0.3);
+  }
+
+  .shimmer {
+    animation: shimmer 2s infinite;
+  }
+
+  .ticket-card {
+    border-radius: 1.5rem;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .glow-green {
+    box-shadow: 0 0 16px oklch(var(--secondary) / 0.3), 0 0 32px
+      oklch(var(--secondary) / 0.15);
+  }
+
+  .shadow-subtle {
+    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+  }
+
+  .bg-ceremonial {
+    background: radial-gradient(
+        ellipse at 50% 0%,
+        oklch(0.18 0.04 80 / 0.6) 0%,
+        transparent 70%
+      ), oklch(var(--background));
+  }
+}
